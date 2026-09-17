@@ -186,11 +186,11 @@
             <p class="text-xs text-slate-400 mb-4">งานเริ่มต้นจาก Command Line เข้าสู่ระบบ Agent คอยประสานงานระหว่าง Model กับ Tools และส่งผลลัพธ์กลับสู่ Terminal</p>
             <div class="mermaid bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
 flowchart TB
-    U["👤 User gives nanopi a task"] --> C["🔌 cli.ts connects the parts"]
-    C --> A["👷 agent.ts runs the work loop"]
-    A --> L["🗣️ llm.ts talks to the model"]
-    A --> T["🧰 tools.ts acts on the computer"]
-    C --> V["🖥️ tui.ts shows progress"]
+    U["👤 User gives nanopi a task<br/>(1. ผู้ใช้ป้อนคำสั่งงาน)"] --> C["🔌 cli.ts connects the parts<br/>(2. ปลั๊กพ่วงเชื่อมต่อทุกชิ้นส่วน)"]
+    C --> A["👷 agent.ts runs the work loop<br/>(3. โฟร์แมนคุมลูปการทำงาน)"]
+    A --> L["🗣️ llm.ts talks to the model<br/>(4. ล่ามแปลภาษาคุยกับ AI)"]
+    A --> T["🧰 tools.ts acts on the computer<br/>(5. กล่องเครื่องมือแก้ไฟล์/รันคำสั่ง)"]
+    C --> V["🖥️ tui.ts shows progress<br/>(6. หน้าจอพิมพ์ผลลัพธ์แบบเรียลไทม์)"]
             </div>
           </div>
 
@@ -206,10 +206,10 @@ flowchart TB
             </p>
             <div class="mermaid bg-slate-950 p-4 rounded-xl border border-slate-800 my-4">
 flowchart TB
-    C["Context (สมุดโน้ต)"] --> M["Convert it to API messages"]
-    M --> A["Call an OpenAI-compatible API"]
-    A --> S["Read small SSE chunks"]
-    S --> E["Emit StreamEvent values"]
+    C["Context<br/>(สมุดโน้ตบันทึกประวัติ)"] --> M["Convert it to API messages<br/>(แปลงเป็นรูปแบบข้อความที่ API เข้าใจ)"]
+    M --> A["Call an OpenAI-compatible API<br/>(ยิง Request ไปยังเซิร์ฟเวอร์ AI)"]
+    A --> S["Read small SSE chunks<br/>(ทยอยอ่านชิ้นส่วนคำตอบที่ไหลกลับมา)"]
+    S --> E["Emit StreamEvent values<br/>(ส่งต่อเหตุการณ์สถานะให้ระบบ)"]
             </div>
             <p>
               ฟังก์ชันหลักคือ <code>stream()</code> จะส่ง <code>Context</code> ปัจจุบันไปยัง Endpoint <code>/chat/completions</code> แบบ OpenAI-compatible ข้อมูลจะไหลกลับมาผ่าน <strong>SSE (Server-Sent Events)</strong> ซึ่ง <code>llm.ts</code> จะแกะเป็น 4 เหตุการณ์มาตรฐาน:
@@ -236,12 +236,12 @@ flowchart TB
             </p>
             <div class="mermaid bg-slate-950 p-4 rounded-xl border border-slate-800 my-4">
 flowchart TB
-    C["อ่าน Context (สมุดโน้ต)"] --> M["ถาม LLM ว่าต้องทำอะไรต่อ"]
-    M --> D["โมเดลขอใช้ Tool หรือไม่?"]
-    D -- "ใช่ (Yes)" --> T["รันเครื่องมือตามลำดับ"]
-    T --> R["จดผลลัพธ์ลง Context"]
+    C["Context<br/>(เปิดอ่านสมุดโน้ตประวัติล่าสุด)"] --> M["Ask LLM<br/>(ส่งถามสมอง AI ว่าต้องทำอะไร)"]
+    M --> D{"Was tool requested?<br/>(AI ขอให้รันเครื่องมือหรือไม่?)"}
+    D -- "ใช่ (Yes)" --> T["Run tools in order<br/>(สั่งรันเครื่องมือช่างตามลำดับ)"]
+    T --> R["Add results to context<br/>(จดผลการรันกลับลงสมุดโน้ต)"]
     R --> M
-    D -- "ไม่ (No)" --> E["จบเทิร์น ตอบผู้ใช้"]
+    D -- "ไม่ (No)" --> E["End turn<br/>(จบงาน พิมพ์คำตอบสมบูรณ์ให้ผู้ใช้)"]
             </div>
             <ol class="list-decimal pl-5 space-y-1 text-xs md:text-sm text-slate-300">
               <li>อ่าน Context ปัจจุบันแล้วถาม LLM ว่าควรทำอย่างไรต่อไป</li>
@@ -315,15 +315,86 @@ flowchart TB
           </div>
 
           <!-- Complete 1 Turn -->
+          <!-- BEGINNER WALKTHROUGH SCENARIO -->
+          <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 p-6 rounded-2xl border border-emerald-500/30 my-8 shadow-xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold mb-3">
+              💡 ตัวอย่างสถานการณ์จำลองจริงทีละวินาที (Step-by-Step Scenario Walkthrough)
+            </div>
+            <h3 class="!mt-0 text-lg font-bold text-white mb-2">
+              สมมุติผู้ใช้พิมพ์สั่งว่า: <span class="text-emerald-400 font-mono">"ช่วยแก้คำว่า bug เป็น fix ในไฟล์ index.html ให้หน่อย"</span>
+            </h3>
+            <p class="text-xs text-slate-300 mb-4">
+              นี่คือสิ่งที่เกิดขึ้นจริงภายใน 5 ไฟล์ในเวลาเพียง 5 วินาที:
+            </p>
+
+            <div class="space-y-3 font-sans text-xs">
+              <!-- Step 1 -->
+              <div class="flex gap-3 bg-slate-950/80 p-3 rounded-xl border border-slate-800 items-start">
+                <span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">1</span>
+                <div>
+                  <strong class="text-purple-300 font-mono">🛎️ tui.ts:</strong> รับข้อความที่คุณพิมพ์เข้ามา แล้วปรับสถานะเป็น <code class="text-amber-400">busy = true</code> (ล็อกไม่ให้พิมพ์ข้อความใหม่แทรก)
+                </div>
+              </div>
+
+              <!-- Step 2 -->
+              <div class="flex gap-3 bg-slate-950/80 p-3 rounded-xl border border-slate-800 items-start">
+                <span class="w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">2</span>
+                <div>
+                  <strong class="text-rose-300 font-mono">🔌 cli.ts:</strong> นำข้อความใส่ลงในสมุดโน้ต <code class="text-blue-300">Context</code> แล้วเรียก <code class="text-amber-300">runAgent()</code> ใน agent.ts
+                </div>
+              </div>
+
+              <!-- Step 3 -->
+              <div class="flex gap-3 bg-slate-950/80 p-3 rounded-xl border border-slate-800 items-start">
+                <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">3</span>
+                <div>
+                  <strong class="text-amber-300 font-mono">👷 agent.ts & 🗣️ llm.ts:</strong> ส่งสมุดโน้ตไปถามสมอง AI โมเดลตอบกลับมาว่า <em>"ขอใช้เครื่องมือ <code>read_file('index.html')</code> เพื่อดูโค้ดก่อน"</em>
+                </div>
+              </div>
+
+              <!-- Step 4 -->
+              <div class="flex gap-3 bg-slate-950/80 p-3 rounded-xl border border-slate-800 items-start">
+                <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">4</span>
+                <div>
+                  <strong class="text-blue-300 font-mono">🧰 tools.ts:</strong> อ่านไฟล์ index.html บนฮาร์ดดิสก์จริง ได้เนื้อหาไฟล์กลับมา แล้วส่งให้ <code class="text-amber-300">agent.ts</code> จดบันทึกผลลัพธ์ลงสมุดโน้ต
+                </div>
+              </div>
+
+              <!-- Step 5 -->
+              <div class="flex gap-3 bg-slate-950/80 p-3 rounded-xl border border-slate-800 items-start">
+                <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">5</span>
+                <div>
+                  <strong class="text-amber-300 font-mono">👷 agent.ts (วนลูปถามซ้ำ):</strong> ส่งเนื้อหาไฟล์กลับไปถาม AI อีกรอบ AI วิเคราะห์แล้วสั่ง <em>"เจอจุดแล้ว ขอใช้เครื่องมือ <code>edit(path, old_string='bug', new_string='fix')</code>"</em>
+                </div>
+              </div>
+
+              <!-- Step 6 -->
+              <div class="flex gap-3 bg-slate-950/80 p-3 rounded-xl border border-slate-800 items-start">
+                <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">6</span>
+                <div>
+                  <strong class="text-emerald-300 font-mono">🧰 tools.ts:</strong> ค้นหาคำว่า bug จุดเดียวแล้วแก้เป็น fix ทันที แล้วตอบกลับมาว่า <em>"แก้ไขเสร็จแล้ว 1 จุด"</em>
+                </div>
+              </div>
+
+              <!-- Step 7 -->
+              <div class="flex gap-3 bg-slate-950/80 p-3 rounded-xl border border-slate-800 items-start">
+                <span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">7</span>
+                <div>
+                  <strong class="text-purple-300 font-mono">🛎️ tui.ts:</strong> AI พิมพ์ตอบคุณว่า <em>"ผมได้แก้ไขคำว่า bug เป็น fix ให้เรียบร้อยแล้วครับ!"</em> แล้วปลดล็อกสถานะ <code class="text-emerald-400">busy = false</code> พร้อมรับคำสั่งถัดไปของคุณ!
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
             <h2 class="!mt-0 text-lg font-bold text-white">🔄 วงจรการทำงาน 1 รอบเต็ม (One Complete Turn)</h2>
             <div class="mermaid bg-slate-950 p-4 rounded-xl border border-slate-800 my-4">
 flowchart TB
-    I["1. tui.ts รับคำสั่งจากผู้ใช้"] --> C["2. cli.ts บันทึกคำสั่งลง Context"]
-    C --> A["3. agent.ts สั่งเริ่มลูป"]
-    A --> L["4. llm.ts ส่งข้อความสตรีม"]
-    L --> D["โมเดลขอใช้เครื่องมือหรือไม่?"]
-    D -- "มี (Yes)" --> T["5. tools.ts ลงมือทำและส่ง Text กลับ"]
+    I["1. tui.ts รับคำสั่ง<br/>(Readline รับข้อความผู้ใช้)"] --> C["2. cli.ts จดลง Context<br/>(บันทึกเป็นข้อความใหม่ในสมุดโน้ต)"]
+    C --> A["3. agent.ts เริ่มลูป<br/>(สั่งเปิด while loop คุมงาน)"]
+    A --> L["4. llm.ts สตรีมข้อมูล<br/>(ส่งถาม AI และรับ SSE Stream)"]
+    L --> D{"Is there tool call?<br/>(AI สั่งเรียกใช้เครื่องมือหรือไม่?)"}
+    D -- "มี (Yes)" --> T["5. tools.ts ทำงานจริง<br/>(อ่าน/เขียนไฟล์ หรือรันคำสั่ง bash)"]
     T --> A
     D -- "ไม่มี (No)" --> I
             </div>
@@ -337,42 +408,86 @@ flowchart TB
         <!-- Right 1 Col: Quick Reference Card -->
         <div class="space-y-6">
           <div class="bg-slate-900/90 p-5 rounded-2xl border border-slate-800 sticky top-20">
-            <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-3">สรุปหน้าที่ 5 ไฟล์หลัก</h3>
-            <div class="space-y-3 text-xs">
-              <div class="p-3 bg-slate-800/60 rounded-xl border border-slate-700">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-wider">สรุป 5 ไฟล์หลัก (ฉบับมือใหม่เข้าใจทันที)</h3>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">เปรียบเทียบชัดเจน</span>
+            </div>
+            <div class="space-y-3.5 text-xs">
+              <!-- 1. llm.ts -->
+              <div class="p-3 bg-slate-800/70 rounded-xl border border-slate-700">
                 <div class="flex justify-between font-mono font-bold text-slate-200">
-                  <span>src/llm.ts</span>
+                  <span class="text-emerald-300">🗣️ src/llm.ts (ล่ามแปลภาษา)</span>
                   <span class="text-emerald-400">~338 บรรทัด</span>
                 </div>
-                <div class="text-slate-400 mt-1">แปลง Context เป็น OpenAI format, อ่าน SSE stream, แยก text_delta และสะสม tool_call</div>
+                <div class="text-slate-300 mt-1.5 text-[11px] leading-relaxed">
+                  <strong>หน้าที่:</strong> คุยกับสมอง AI ผ่านสายโทรศัพท์อินเทอร์เน็ต
+                </div>
+                <div class="mt-2 space-y-1 bg-slate-950/60 p-2 rounded text-[11px] text-slate-400 border border-slate-800">
+                  <div>• <span class="text-emerald-400 font-semibold">SSE Stream:</span> เหมือน <em>"ก๊อกน้ำเปิดไหลทีละหยด"</em> ตัวหนังสือพิมพ์วิ่งออกมาทีละคำ</div>
+                  <div>• <span class="text-emerald-400 font-semibold">text_delta:</span> เศษคำแต่ละหยด เช่น "ส", "วัส", "ดี"</div>
+                  <div>• <span class="text-emerald-400 font-semibold">tool_call:</span> AI บอกว่า <em>"ช่วยหยิบเครื่องมืออ่านไฟล์ให้หน่อย"</em></div>
+                </div>
               </div>
-              <div class="p-3 bg-slate-800/60 rounded-xl border border-slate-700">
+
+              <!-- 2. agent.ts -->
+              <div class="p-3 bg-slate-800/70 rounded-xl border border-slate-700">
                 <div class="flex justify-between font-mono font-bold text-slate-200">
-                  <span>src/agent.ts</span>
+                  <span class="text-amber-300">👷 src/agent.ts (โฟร์แมนคุมงาน)</span>
                   <span class="text-amber-400">~218 บรรทัด</span>
                 </div>
-                <div class="text-slate-400 mt-1">while loop หลัก, รัน Tool ตามลำดับ, จดผลลง Context, ดัก max_tokens และ Abort</div>
+                <div class="text-slate-300 mt-1.5 text-[11px] leading-relaxed">
+                  <strong>หน้าที่:</strong> ไม่ลงมือแก้ไฟล์เอง แต่คอยสั่งการและจดบันทึก
+                </div>
+                <div class="mt-2 space-y-1 bg-slate-950/60 p-2 rounded text-[11px] text-slate-400 border border-slate-800">
+                  <div>• <span class="text-amber-400 font-semibold">while loop:</span> ลูปทำงานซ้ำ <em>"ถาม AI -> สั่งช่างทำ -> เอาผลกลับไปถาม AI"</em> จนเสร็จ</div>
+                  <div>• <span class="text-amber-400 font-semibold">max_tokens:</span> ป้องกันกรณี <em>"หมึกหมดกลางคัน"</em> ถ้าคำสั่งขาดห้ามนำไปรัน</div>
+                  <div>• <span class="text-amber-400 font-semibold">Abort:</span> ปุ่ม <em>"หยุดฉุกเฉิน"</em> เมื่องานถูกยกเลิก (Ctrl+C) ให้หยุดอย่างปลอดภัย</div>
+                </div>
               </div>
-              <div class="p-3 bg-slate-800/60 rounded-xl border border-slate-700">
+
+              <!-- 3. tools.ts -->
+              <div class="p-3 bg-slate-800/70 rounded-xl border border-slate-700">
                 <div class="flex justify-between font-mono font-bold text-slate-200">
-                  <span>src/tools.ts</span>
+                  <span class="text-blue-300">🧰 src/tools.ts (กล่องเครื่องมือช่าง)</span>
                   <span class="text-blue-400">~154 บรรทัด</span>
                 </div>
-                <div class="text-slate-400 mt-1">read_file, write_file, edit, run_bash พร้อมระบบ Truncate 200 บรรทัด</div>
+                <div class="text-slate-300 mt-1.5 text-[11px] leading-relaxed">
+                  <strong>หน้าที่:</strong> ค้อน เลื่อย ไขควง ที่ลงมือแตะต้องไฟล์และคอมพิวเตอร์จริง
+                </div>
+                <div class="mt-2 space-y-1 bg-slate-950/60 p-2 rounded text-[11px] text-slate-400 border border-slate-800">
+                  <div>• <span class="text-blue-400 font-semibold">4 เครื่องมือ:</span> <code>read_file</code> (อ่าน), <code>write_file</code> (เขียน), <code>edit</code> (แก้เฉพาะจุด), <code>run_bash</code> (รันคำสั่ง)</div>
+                  <div>• <span class="text-blue-400 font-semibold">Truncate 200:</span> ถ้าไฟล์ยาวเป็นหมื่นบรรทัด จะตัดส่งแค่ <em>200 บรรทัดท้าย</em> ป้องกันสมุดโน้ตล้น</div>
+                </div>
               </div>
-              <div class="p-3 bg-slate-800/60 rounded-xl border border-slate-700">
+
+              <!-- 4. tui.ts -->
+              <div class="p-3 bg-slate-800/70 rounded-xl border border-slate-700">
                 <div class="flex justify-between font-mono font-bold text-slate-200">
-                  <span>src/tui.ts</span>
+                  <span class="text-purple-300">🛎️ src/tui.ts (โต๊ะประชาสัมพันธ์)</span>
                   <span class="text-purple-400">~91 บรรทัด</span>
                 </div>
-                <div class="text-slate-400 mt-1">Readline สำหรับรับข้อความ, จัดการ Busy State, ดักจับการกด Ctrl+C เพื่อ Abort</div>
+                <div class="text-slate-300 mt-1.5 text-[11px] leading-relaxed">
+                  <strong>หน้าที่:</strong> คอยคุยกับผู้ใช้ที่หน้าจอ Terminal
+                </div>
+                <div class="mt-2 space-y-1 bg-slate-950/60 p-2 rounded text-[11px] text-slate-400 border border-slate-800">
+                  <div>• <span class="text-purple-400 font-semibold">Readline:</span> รอรับข้อความที่คุณพิมพ์แล้วกด Enter</div>
+                  <div>• <span class="text-purple-400 font-semibold">Busy State:</span> ขึ้นป้าย <em>"กำลังทำงาน ห้ามกวน"</em> กันผู้ใช้พิมพ์แทรกตอน AI คิด</div>
+                </div>
               </div>
-              <div class="p-3 bg-slate-800/60 rounded-xl border border-slate-700">
+
+              <!-- 5. cli.ts -->
+              <div class="p-3 bg-slate-800/70 rounded-xl border border-slate-700">
                 <div class="flex justify-between font-mono font-bold text-slate-200">
-                  <span>src/cli.ts</span>
+                  <span class="text-rose-300">🔌 src/cli.ts (รางปลั๊กพ่วงรวมสาย)</span>
                   <span class="text-rose-400">~128 บรรทัด</span>
                 </div>
-                <div class="text-slate-400 mt-1">Composition root, โหลด Session JSONL, ผูก Event เข้ากับ Tui, จัดการ Life cycle</div>
+                <div class="text-slate-300 mt-1.5 text-[11px] leading-relaxed">
+                  <strong>หน้าที่:</strong> เอาสายไฟของทั้ง 4 โมดูลมาเสียบปลั๊กรวมกันให้ทำงานได้
+                </div>
+                <div class="mt-2 space-y-1 bg-slate-950/60 p-2 rounded text-[11px] text-slate-400 border border-slate-800">
+                  <div>• <span class="text-rose-400 font-semibold">Composition Root:</span> สวิตช์เมนบอร์ดที่เปิดแล้วทั้งระบบทำงานพร้อมกัน</div>
+                  <div>• <span class="text-rose-400 font-semibold">Session JSONL:</span> สมุดบันทึกประวัติเซฟลงไฟล์ 1 บรรทัด = 1 ข้อความ เปิดใหม่ก็คุยต่อได้</div>
+                </div>
               </div>
             </div>
 
