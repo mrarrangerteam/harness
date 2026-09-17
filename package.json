@@ -1,0 +1,10 @@
+{
+  "name": "mrglab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Harness Live: Pi from Scratch — Thai-English Interactive Study Guide & Comparison",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'No build step required for static site'"
+  }
+}
