@@ -1,54 +1,48 @@
-# Harness Live · Pi from Scratch (ฉบับศึกษาเชิงลึก ไทย-อังกฤษ)
+# ⚚ Harness Architecture Hub (ไทย-อังกฤษ)
 
-> **"What I cannot create, I do not understand."** — Richard Feynman  
-> *(สิ่งใดที่ฉันสร้างขึ้นมาเองไม่ได้ แปลว่าฉันยังไม่เข้าใจมันอย่างแท้จริง)*
+ศูนย์รวมการเรียนรู้สถาปัตยกรรมและรันไทม์ของ **AI Coding Agent** ฉบับภาษาไทยผสมอังกฤษ เข้าใจง่ายสำหรับมือใหม่และวิศวกรซอฟต์แวร์ 
 
-คู่มือและ Web Application แบบ Interactive สรุปและถอดรหัสเบื้องหลังการทำงานของ AI Coding Assistant (Coding Agent) จากบทเรียนต้นฉบับ [Harness Live · Pi from Scratch](https://harness.ohmmingrath.com/) โดย SaladDay และ Ohmmingrath
-
----
-
-## 📌 สรุปโครงสร้างระบบ 5 โมดูล (The 5-Module Map)
-
-1. **`src/llm.ts` (ล่ามแปลภาษา - The Translator)**: ทำหน้าที่แปลงข้อความ Context ภายใน ให้เป็นไปตามโปรโตคอลของ OpenAI `/chat/completions`, รับและแยกชิ้นส่วน SSE Stream (`text_delta`, `tool_call`, `done`, `error`)
-2. **`src/agent.ts` (โฟร์แมนคุมงาน - The Foreman)**: คุม `while (true)` ลูป, สั่งรันเครื่องมือตามลำดับ, จดผลลัพธ์ลง Context, ดักจับข้อผิดพลาด `max_tokens` และดักยกเลิกอย่างขาวสะอาด (Abort)
-3. **`src/tools.ts` (กล่องเครื่องมือ - The Toolbox)**: ฟังก์ชันที่มี Side Effects แตะต้องไฟล์และคอมพิวเตอร์จริง (`read_file`, `write_file`, `edit`, `run_bash`) พร้อมระบบ Truncate 200 บรรทัด
-4. **`src/tui.ts` (โต๊ะต้อนรับ - Terminal UI)**: จัดการอินพุตผ่าน Node `readline`, พิมพ์ตัวอักษรแบบสตรีม, ดักการกด `Ctrl+C` เพื่อ Abort และคุม Busy State
-5. **`src/cli.ts` (รางปลั๊กไฟรวมระบบ - Composition Root)**: จุดเชื่อมต่อทุกโมดูลเข้าด้วยกัน และบันทึกประวัติการคุยลงไฟล์ `~/.nanopi/session.jsonl`
+แยกออกเป็น 2 โปรเจกต์หลักที่ทำงานอิสระต่อกัน:
 
 ---
 
-## ⚖️ สรุป 5 ตัวอย่างเปรียบเทียบสำคัญ (Comparative Matrix)
-
-1. **Chatbot ธรรมดา VS AI Coding Agent**: Single-turn Response ธรรมดา ไม่แตะโลกจริง VS Multi-turn Loop ที่อ่านผลลัพธ์การรันเทสต์แล้วสั่งแก้โค้ดซ้ำจนผ่าน
-2. **Pure Functions VS Impure Tools (Side Effects)**: ฟังก์ชันคณิตศาสตร์ไร้ผลข้างเคียง VS เครื่องมือที่เขียนไฟล์จริงและสั่งรัน Shell ซึ่งไม่สามารถ Undo ได้หลังเกิด Side effect
-3. **Normal HTTP Request VS SSE Streaming**: รอ 25 วินาทีหน้าจอนิ่ง VS สตรีมตัวอักษรแรกใน 400ms พร้อมระบบประกอบ Tool Call Arguments แบบไร้รอยต่อ
-4. **Stateless Model VS Stateful Agent (Context Notebook)**: ตัว Model เองไม่มีความจำเลย (Stateless) แต่ Agent อาศัยสมุดโน้ต Context ที่คอยอัปเดตและบีบอัด (Compaction) เมื่อครบ 50 ข้อความ
-5. **nano-pi VS Production Agent Frameworks**: ตัวอย่างฉบับเรียนรู้ ~900 บรรทัด VS ระบบจริงที่มี Sandboxing, Permission Prompting, Parallel Tool Execution และ AST Editing
+## 🎯 โปรเจกต์ที่ 1: Harness and His Friends (สไลด์บรรยาย 40 สไลด์)
+- **URL เข้าชมโดยตรง:** `/friends.html#1` หรือ `/friends`
+- **ต้นฉบับ:** `https://harness-and-his-friends.vercel.app/#1`
+- **ลักษณะ:** สไลด์บรรยายสถาปัตยกรรม AI Agent ระดับแนวหน้า 40 สไลด์เต็ม โทนสีและสไตล์ Anthropic แท้ (Newsreader, Figtree, JetBrains Mono)
+- **ฟีเจอร์เด่น:**
+  - **Interactive Agent Loop:** แผนภาพวงลูปเอเจนต์ 5 สเต็ป คลิกดูคำอธิบายแต่ละขั้นตอนได้
+  - **Tool Zoo (สวนสัตว์เครื่องมือ 28 ตัว):** การ์ดพลิก 28 ใบพร้อมตัวกรอง Frontier/OSS/Multiplexers
+  - **Cache Economics Calculator:** สไลเดอร์คำนวณเงินจริงที่ประหยัดได้จาก Prompt Caching
+  - **Prefix Invalidation Demo:** คลิกดูการพังทลายของแคชเมื่อส่วนหัวถูกรบกวน
+  - **Multiplexers & herdr:** กลไกการคุมหลายเอเจนต์ และการสั่งอนุมัติผ่านมือถือ
 
 ---
 
-## 🚀 วิธีเปิดใช้งานและ Deploy ขึ้น Vercel
+## ⚡ โปรเจกต์ที่ 2: Harness Live · Pi from Scratch (ห้องแล็บปฏิบัติการ)
+- **URL เข้าชมโดยตรง:** `/live.html#chapter1` หรือ `/live`
+- **ต้นฉบับ:** `https://harness.ohmmingrath.com/#chapter1`
+- **ลักษณะ:** คู่มือเชิงลึกในการสร้าง AI Coding Assistant ทีละขั้นตอน พร้อมโค้ดตัวอย่างจริงและไดอะแกรมสถาปัตยกรรม
+- **เนื้อหา 3 บท:**
+  - **บทที่ 1 แผนผัง (The Map):** แผนผังการทำงานและการจัดวางตำแหน่งไฟล์ของ Agent
+  - **บทที่ 2 สร้าง nano-pi (23 สเต็ป):** พาเขียน Coding Agent ขนาดเล็กตั้งแต่เริ่มต้นจนเสร็จสมบูรณ์
+  - **Inside Pi (30 สเต็ป):** แกะกล่องสถาปัตยกรรมระดับโปรดักชันของ Pi และ omp
+  - **Mermaid Diagrams:** แผนภาพโฟลว์ 2 ภาษา (ไทย-อังกฤษ) ในทุกบล็อก
 
-### 1. เปิดดูบนเครื่อง Mac ตอนนี้เลย
-```bash
-open /Volumes/Sample Data/0.Vibe Code All Project/Vscode Claudecode/Harness/index.html
-```
+---
 
-### 2. Deploy ขึ้น Vercel
-โปรเจกต์นี้รองรับ Vercel แบบ Zero-config (มี `vercel.json` และ `package.json` พร้อม):
+## 🚀 การ Deploy บน Vercel
+- โปรเจกต์ถูก Deploy บน Vercel อัตโนมัติเมื่อ Push ขึ้น branch `main`
+- หน้าหลัก (`/`) เป็น Hub รวมและมีปุ่มกระโดดเข้าสู่ทั้งสองโปรเจกต์ได้ทันที
+- ทั้งสองหน้าเว็บมีแถบ Switcher ด้านบนสุด ให้สลับไปมาได้อย่างรวดเร็ว
 
-**วิธีที่ 1: ใช้ Vercel CLI ใน Terminal**
-```bash
-cd /Volumes/Sample Data/0.Vibe Code All Project/Vscode Claudecode/Harness
-vercel --prod
-```
+---
 
-**วิธีที่ 2: ใช้ GitHub Repo**
-1. สร้าง Repo ใหม่บน GitHub (เช่น `mrarrangerteam/harness`)
-2. Push โค้ดขึ้นไป:
-   ```bash
-   cd /Volumes/Sample Data/0.Vibe Code All Project/Vscode Claudecode/Harness
-   git remote add origin https://github.com/mrarrangerteam/harness.git
-   git push -u origin main
-   ```
-3. เปิดหน้าแดชบอร์ด [https://vercel.com/mrarrangers-projects](https://vercel.com/mrarrangers-projects) แล้วกด **"Add New... -> Project"** เลือก `harness` เพื่อ Deploy ทันที!
+### 🧪 การตรวจสอบคุณภาพด้วย Playwright
+โปรเจกต์นี้ผ่านการทดสอบอัตโนมัติด้วย **Playwright** ครอบคลุม:
+1. การโหลดและการแสดงผลภาษาไทย-อังกฤษสมบูรณ์ 100%
+2. การคลิกและโต้ตอบกับแผนภาพ Agent Loop
+3. การพลิกการ์ด Tool Zoo ครบ 28 ใบ
+4. การคำนวณของเครื่องคิดเลข Cache Calculator
+5. การสลับแท็บ Chapter ในห้องแล็บปฏิบัติการ
+6. บันทึกภาพหน้าจอตรวจสอบคุณภาพไว้ในโฟลเดอร์ `screenshots/`

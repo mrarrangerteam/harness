@@ -1,3 +1,7 @@
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/friends", "destination": "/friends.html" },
+    { "source": "/live", "destination": "/live.html" }
+  ]
 }

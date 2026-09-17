@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harness Live · Pi from Scratch | คู่มือเรียนรู้ AI Coding Agent (ไทย-อังกฤษ)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            },
+            darkbg: '#0B0F17',
+            cardbg: '#131B2A',
+            bordercol: '#1F293D'
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Mermaid JS for Interactive Diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+  </script>
+  <!-- Prism.js for TypeScript Code Highlight -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
+  <style>
+    pre code { font-family: 'JetBrains Mono', Menlo, Monaco, Consolas, monospace; font-size: 0.875rem; }
+    .prose-custom p { margin-bottom: 0.85rem; line-height: 1.7; color: #cbd5e1; }
+    .prose-custom h2 { font-size: 1.5rem; font-weight: 700; color: #f8fafc; margin-top: 2rem; margin-bottom: 0.75rem; border-bottom: 1px solid #1e293b; padding-bottom: 0.5rem; }
+    .prose-custom h3 { font-size: 1.2rem; font-weight: 600; color: #38bdf8; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+    .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .mermaid svg { max-width: 100%; height: auto; margin: auto; }
+  </style>
+</head>
+<body class="bg-[#0B0F17] text-slate-200 min-h-screen font-sans antialiased selection:bg-emerald-500/30 selection:text-emerald-300">
+
+  <!-- Top Switcher Bar between 2 Projects -->
+  <div id="dual-app-switcher" class="sticky top-0 z-[60] bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 text-xs py-2 px-4 flex items-center justify-between shadow-md">
+    <div class="flex items-center gap-3">
+      <span class="inline-flex items-center gap-1.5 bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 px-3 py-1 rounded-full font-semibold">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        โปรเจกต์ 2: ปฏิบัติการเจาะลึก (Harness Live &amp; Pi from Scratch)
+      </span>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="friends.html#1" class="text-orange-400 hover:text-orange-300 bg-orange-950/50 hover:bg-orange-900/60 border border-orange-500/40 px-3.5 py-1 rounded-full font-medium transition duration-200 flex items-center gap-2 shadow-sm">
+        <span>← สลับไปโปรเจกต์ 1: สไลด์บรรยาย (Harness and His Friends · 40 สไลด์)</span>
+        <span class="text-sm">🎯</span>
+      </a>
+    </div>
+  </div>
+
+
+  <!-- Navbar -->
+  <header class="sticky top-[37px] z-50 backdrop-blur-md bg-[#0B0F17]/90 border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <span class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-xl">π</span>
+        <div>
+          <div class="font-bold text-slate-100 flex items-center gap-2">
+            Harness Live · Pi from Scratch
+            <span class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded">ไทย-อังกฤษ</span>
+          </div>
+          <div class="text-xs text-slate-400">เข้าใจการทำงานของ AI Coding Assistant จากศูนย์</div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="hidden md:flex items-center gap-1 bg-slate-900/90 p-1 rounded-xl border border-slate-800">
+        <button onclick="switchTab('tab-ch1')" id="btn-tab-ch1" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-emerald-500 text-white shadow">
+          🗺️ บทที่ 1: แผนผัง (The Map)
+        </button>
+        <button onclick="switchTab('tab-ch2')" id="btn-tab-ch2" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🛠️ บทที่ 2: สเต็ปสร้าง 23 ขั้น
+        </button>
+        <button onclick="switchTab('tab-inside-pi')" id="btn-tab-inside-pi" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🏭 Inside Pi (Production 30 สเต็ป)
+        </button>
+        <button onclick="switchTab('tab-comparisons')" id="btn-tab-comparisons" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          ⚖️ ตัวอย่างเปรียบเทียบ (Comparisons)
+        </button>
+        <button onclick="switchTab('tab-code')" id="btn-tab-code" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          💻 โค้ด 5 ไฟล์ (Code Explorer)
+        </button>
+        <button onclick="switchTab('tab-deploy')" id="btn-tab-deploy" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🚀 Deploy ขึ้น Vercel
+        </button>
+      </nav>
+
+      <div class="flex items-center gap-2">
+        <a href="https://harness.ohmmingrath.com" target="_blank" class="text-xs text-slate-400 hover:text-slate-200 bg-slate-800/80 px-2.5 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1">
+          <span>ต้นฉบับ</span>
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Tab Bar -->
+  <div class="md:hidden flex overflow-x-auto gap-2 p-2 bg-slate-900 border-b border-slate-800 text-xs">
+    <button onclick="switchTab('tab-ch1')" class="tab-btn px-3 py-1 rounded bg-emerald-500 text-white whitespace-nowrap">🗺️ แผนผัง (The Map)</button>
+    <button onclick="switchTab('tab-ch2')" class="tab-btn px-3 py-1 rounded text-slate-400 whitespace-nowrap">🛠️ 23 สเต็ป</button>
+    <button onclick="switchTab('tab-inside-pi')" class="tab-btn px-3 py-1 rounded text-slate-400 whitespace-nowrap">🏭 Inside Pi (30 สเต็ป)</button>
+    <button onclick="switchTab('tab-comparisons')" class="tab-btn px-3 py-1 rounded text-slate-400 whitespace-nowrap">⚖️ เปรียบเทียบ</button>
+    <button onclick="switchTab('tab-code')" class="tab-btn px-3 py-1 rounded text-slate-400 whitespace-nowrap">💻 โค้ด 5 ไฟล์</button>
+    <button onclick="switchTab('tab-deploy')" class="tab-btn px-3 py-1 rounded text-slate-400 whitespace-nowrap">🚀 Deploy</button>
+  </div>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- HERO BANNER -->
+    <div class="mb-10 bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-950 p-6 md:p-8 rounded-2xl border border-emerald-500/20 shadow-xl relative overflow-hidden">
+      <div class="relative z-10 max-w-4xl">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-3">
+          🎓 การเรียนรู้แบบ Deep Conceptual Understanding (ไทยผสมอังกฤษ)
+        </div>
+        <h1 class="text-2xl md:text-4xl font-extrabold text-white tracking-tight leading-tight mb-3">
+          เจาะลึกกลไก AI Coding Agent จากศูนย์ (Pi from Scratch)
+        </h1>
+        <p class="text-slate-300 text-sm md:text-base leading-relaxed mb-4">
+          ถอดรหัสเบื้องหลัง AI ช่วยเขียนโค้ด (เช่น Claude Code, Cursor, Pi, Devin) ผ่านโปรเจกต์มินิมอล <strong>nanopi</strong> ที่ประกอบด้วย 5 ไฟล์ TypeScript เล็กๆ เท่านั้น เข้าใจง่ายด้วยภาพเปรียบเทียบ อุปมาเชิงสถาปัตยกรรม และตัวอย่างโค้ดจริง
+        </p>
+        <blockquote class="border-l-4 border-emerald-500 pl-4 py-1 italic text-slate-400 text-xs md:text-sm bg-slate-900/60 rounded-r">
+          “What I cannot create, I do not understand.” — Richard Feynman<br>
+          <span class="text-slate-500 not-italic">(สิ่งใดที่ฉันสร้างขึ้นมาเองไม่ได้ แปลว่าฉันยังไม่เข้าใจมันอย่างแท้จริง)</span>
+        </blockquote>
+      </div>
+      <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none"></div>
+    </div>
+
+    <!-- TAB 1: CHAPTER 1 - THE MAP -->
+    <section id="tab-ch1" class="tab-content block">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left 2 Cols: Main Content -->
+        <div class="lg:col-span-2 space-y-8 prose-custom">
+
+          <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+            <h2 class="!mt-0 text-xl font-bold text-white flex items-center gap-2">
+              <span>🗺️ บทที่ 1: The Map (แผนผังระบบ 5 โมดูล)</span>
+            </h2>
+            <p>
+              ลองจินตนาการว่า <strong>nanopi</strong> คือ <strong>"เวิร์กช็อปขนาดย่อม" (Tiny Workshop)</strong> ในโรงงาน โดยแต่ละไฟล์มีหน้าที่ชัดเจน ไม่ก้าวก่ายกัน:
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4">
+              <div class="bg-slate-800/60 p-3.5 rounded-xl border border-slate-700/60">
+                <div class="font-bold text-emerald-400 text-sm">🗣️ llm.ts (ล่ามประจำประตู)</div>
+                <div class="text-xs text-slate-300 mt-1">คอยคุยกับสมอง AI แปลงภาษา API ส่งเข้าส่งออก</div>
+              </div>
+              <div class="bg-slate-800/60 p-3.5 rounded-xl border border-slate-700/60">
+                <div class="font-bold text-amber-400 text-sm">👷 agent.ts (โฟร์แมนคุมหน้างาน)</div>
+                <div class="text-xs text-slate-300 mt-1">คอยวางแผน วนลูปถาม AI แล้วสั่งช่างหยิบเครื่องมือ</div>
+              </div>
+              <div class="bg-slate-800/60 p-3.5 rounded-xl border border-slate-700/60">
+                <div class="font-bold text-blue-400 text-sm">🧰 tools.ts (กล่องเครื่องมือช่าง)</div>
+                <div class="text-xs text-slate-300 mt-1">เครื่องมือแตะไฟล์และรันคำสั่ง bash บนเครื่องจริง</div>
+              </div>
+              <div class="bg-slate-800/60 p-3.5 rounded-xl border border-slate-700/60">
+                <div class="font-bold text-purple-400 text-sm">🛎️ tui.ts (โต๊ะประชาสัมพันธ์)</div>
+                <div class="text-xs text-slate-300 mt-1">รับคำสั่งจากผู้ใช้ และพิมพ์ข้อความทีละตัวอักษร</div>
+              </div>
+              <div class="bg-slate-800/60 p-3.5 rounded-xl border border-slate-700/60 sm:col-span-2">
+                <div class="font-bold text-rose-400 text-sm">🔌 cli.ts (รางปลั๊กพ่วงรวมสายไฟ)</div>
+                <div class="text-xs text-slate-300 mt-1">จุดเชื่อมต่อทุกชิ้นส่วนเข้าด้วยกัน และบันทึกประวัติลง session.jsonl</div>
+              </div>
+            </div>
+
+            <!-- 3 Basic Concepts -->
+            <h3 class="text-base text-slate-100 font-semibold mt-6 mb-3">📌 3 คำศัพท์พื้นฐานที่ต้องรู้ก่อนเริ่ม:</h3>
+            <ul class="space-y-3 text-xs md:text-sm text-slate-300">
+              <li class="bg-slate-800/40 p-3 rounded-lg border-l-2 border-emerald-500">
+                <strong class="text-emerald-300">1. LLM (Large Language Model):</strong> สมองกลที่สร้างข้อความ และสามารถ <em>"ขอใช้เครื่องมือที่กำหนดได้" (Tool Call)</em> แต่ตัว LLM เอง <u>ไม่สามารถ</u> แตะไฟล์หรือรันคำสั่งในคอมพิวเตอร์ของคุณได้โดยตรง
+              </li>
+              <li class="bg-slate-800/40 p-3 rounded-lg border-l-2 border-amber-500">
+                <strong class="text-amber-300">2. Context (สมุดโน้ตประจำงาน):</strong> ข้อมูล JSON ที่เก็บ System Prompt, ประวัติการสนทนา, คำสั่งเรียกเครื่องมือ และผลลัพธ์ที่ได้จากการรันเครื่องมือ นี่คือ <em>"ความทรงจำเดียว"</em> ของ Agent
+              </li>
+              <li class="bg-slate-800/40 p-3 rounded-lg border-l-2 border-blue-500">
+                <strong class="text-blue-300">3. Event (ใบแจ้งสถานะย่อย):</strong> ข้อความแจ้งความคืบหน้าที่ถูกส่งออกมาระหว่างที่งานกำลังทำอยู่ (Real-time stream) เช่น กำลังพิมพ์ข้อความ หรือกำลังสั่งรัน Tool โดยไม่ต้องรอให้จบลูปทั้งก้อน
+              </li>
+            </ul>
+          </div>
+
+          <!-- Mermaid Map -->
+          <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+            <h3 class="!mt-0 text-base font-bold text-white mb-2">Diagram: The 5-Module Map</h3>
+            <p class="text-xs text-slate-400 mb-4">งานเริ่มต้นจาก Command Line เข้าสู่ระบบ Agent คอยประสานงานระหว่าง Model กับ Tools และส่งผลลัพธ์กลับสู่ Terminal</p>
+            <div class="mermaid bg-slate-950 p-4 rounded-xl border border-slate-800 text-center">
+flowchart TB
+    U["👤 User gives nanopi a task<br/>(1. ผู้ใช้ป้อนคำสั่งงาน)"] --> C["🔌 cli.ts connects the parts<br/>(2. ปลั๊กพ่วงเชื่อมต่อทุกชิ้นส่วน)"]
+    C --> A["👷 agent.ts runs the work loop<br/>(3. โฟร์แมนคุมลูปการทำงาน)"]
+    A --> L["🗣️ llm.ts talks to the model<br/>(4. ล่ามแปลภาษาคุยกับ AI)"]
+    A --> T["🧰 tools.ts acts on the computer<br/>(5. กล่องเครื่องมือแก้ไฟล์/รันคำสั่ง)"]
+    C --> V["🖥️ tui.ts shows progress<br/>(6. หน้าจอพิมพ์ผลลัพธ์แบบเรียลไทม์)"]
+            </div>
+          </div>
+
+          <!-- Module Deep Dives -->
+          <!-- 1. llm.ts -->
+          <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="!mt-0 !mb-0 text-lg font-bold text-emerald-400">1. llm.ts — ล่ามประจำประตูโรงงาน (The Translator)</h2>
+              <span class="badge bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">src/llm.ts</span>
+            </div>
+            <p>
+              <code>llm.ts</code> ทำหน้าที่เหมือน <strong>"ล่ามแปลภาษา"</strong> โมเดลแต่ละค่าย (OpenAI, Anthropic, Ollama, GLM) มีรูปแบบข้อมูลส่งผ่านสาย (Wire-format) ที่ไม่เหมือนกัน โค้ดส่วนอื่นของโปรแกรมไม่ควรต้องมารับรู้เรื่องนี้
+            </p>
+            <div class="mermaid bg-slate-950 p-4 rounded-xl border border-slate-800 my-4">
+flowchart TB
+    C["Context<br/>(สมุดโน้ตบันทึกประวัติ)"] --> M["Convert it to API messages<br/>(แปลงเป็นรูปแบบข้อความที่ API เข้าใจ)"]
+    M --> A["Call an OpenAI-compatible API<br/>(ยิง Request ไปยังเซิร์ฟเวอร์ AI)"]
+    A --> S["Read small SSE chunks<br/>(ทยอยอ่านชิ้นส่วนคำตอบที่ไหลกลับมา)"]
+    S --> E["Emit StreamEvent values<br/>(ส่งต่อเหตุการณ์สถานะให้ระบบ)"]
+            </div>
+            <p>
+              ฟังก์ชันหลักคือ <code>stream()</code> จะส่ง <code>Context</code> ปัจจุบันไปยัง Endpoint <code>/chat/completions</code> แบบ OpenAI-compatible ข้อมูลจะไหลกลับมาผ่าน <strong>SSE (Server-Sent Events)</strong> ซึ่ง <code>llm.ts</code> จะแกะเป็น 4 เหตุการณ์มาตรฐาน:
+            </p>
+            <div class="grid grid-cols-2 gap-2 text-xs mb-4">
+              <div class="p-2.5 bg-slate-800 rounded border border-slate-700"><code>text_delta</code>: ตัวอักษรชุดถัดไปที่โมเดลพิมพ์</div>
+              <div class="p-2.5 bg-slate-800 rounded border border-slate-700"><code>tool_call</code>: คำขอสั่งรัน Tool ที่ประกอบร่างเสร็จสมบูรณ์แล้ว</div>
+              <div class="p-2.5 bg-slate-800 rounded border border-slate-700"><code>done</code>: การสตรีมสิ้นสุดลง พร้อมเหตุผล (เช่น สั่งจบ หรือถูกตัด)</div>
+              <div class="p-2.5 bg-slate-800 rounded border border-slate-700"><code>error</code>: เกิดข้อผิดพลาดในระดับ Request หรือ Stream</div>
+            </div>
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs text-slate-300">
+              <strong class="text-amber-400">💡 เคล็ดลับสถาปัตยกรรม:</strong> พารามิเตอร์ของ Tool มักถูกสตรีมมาเป็นชิ้นส่วนเล็กๆ (JSON Chunks) หน้าที่ของ <code>llm.ts</code> คือต้องสะสม (Buffer) ชิ้นส่วนเหล่านั้นจนครบก้อน แล้วจึงปล่อย <code>tool_call</code> ที่สมบูรณ์ออกมาให้ Agent เพื่อป้องกัน Agent ได้รับ JSON แหว่ง!
+            </div>
+          </div>
+
+          <!-- 2. agent.ts -->
+          <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="!mt-0 !mb-0 text-lg font-bold text-amber-400">2. agent.ts — โฟร์แมนคุมหน้างาน (The Foreman)</h2>
+              <span class="badge bg-amber-500/20 text-amber-300 border border-amber-500/30">src/agent.ts</span>
+            </div>
+            <p>
+              หัวใจของ Agent ทั้งหมดคือ <strong>while loop ธรรมดาๆ</strong> ที่ทรงพลัง:
+            </p>
+            <div class="mermaid bg-slate-950 p-4 rounded-xl border border-slate-800 my-4">
+flowchart TB
+    C["Context<br/>(เปิดอ่านสมุดโน้ตประวัติล่าสุด)"] --> M["Ask LLM<br/>(ส่งถามสมอง AI ว่าต้องทำอะไร)"]
+    M --> D{"Was tool requested?<br/>(AI ขอให้รันเครื่องมือหรือไม่?)"}
+    D -- "ใช่ (Yes)" --> T["Run tools in order<br/>(สั่งรันเครื่องมือช่างตามลำดับ)"]
+    T --> R["Add results to context<br/>(จดผลการรันกลับลงสมุดโน้ต)"]
+    R --> M
+    D -- "ไม่ (No)" --> E["End turn<br/>(จบงาน พิมพ์คำตอบสมบูรณ์ให้ผู้ใช้)"]
+            </div>
+            <ol class="list-decimal pl-5 space-y-1 text-xs md:text-sm text-slate-300">
+              <li>อ่าน Context ปัจจุบันแล้วถาม LLM ว่าควรทำอย่างไรต่อไป</li>
+              <li>ถ้า LLM ขอให้รัน Tool → หยิบเครื่องมือใน <code>tools.ts</code> มารันตามลำดับ</li>
+              <li>นำข้อความตอบกลับของ Assistant และผลการรัน Tool (Tool Result) บันทึกลงใน <code>Context</code></li>
+              <li>วนลูปกลับไปถาม LLM ใหม่อีกครั้ง จนกว่า LLM จะหยุดขอใช้ Tool</li>
+            </ol>
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs text-slate-300 mt-4">
+              <strong class="text-emerald-400">💡 ข้อสังเกตสำคัญ:</strong> <code>runAgent()</code> จะแก้ไข <code>Context</code> ที่ส่งเข้ามาแบบ <em>in-place</em> (เปลี่ยนแปลงในตัวแปรเดิม) ตัว Agent ไม่มีที่เก็บประวัติความลับแยกไว้ข้างในเลย ประวัติทั้งหมดอยู่ในสมุดโน้ตเล่มนี้เท่านั้น!
+            </div>
+          </div>
+
+          <!-- 3. tools.ts -->
+          <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="!mt-0 !mb-0 text-lg font-bold text-blue-400">3. tools.ts — กล่องเครื่องมือช่าง (The Toolbox)</h2>
+              <span class="badge bg-blue-500/20 text-blue-300 border border-blue-500/30">src/tools.ts</span>
+            </div>
+            <p>
+              <code>tools.ts</code> รวบรวม 4 เครื่องมือทรงพลัง (Built-in Tools):
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs my-4">
+              <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                <div class="font-bold text-blue-300">📖 read_file</div>
+                <div class="text-slate-400 mt-1">อ่านไฟล์ข้อความ (หากยาวเกิน 200 บรรทัด จะตัดหาง 200 บรรทัดล่าสุด แล้วเซฟไฟล์เต็มไว้ใน temp)</div>
+              </div>
+              <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                <div class="font-bold text-emerald-300">✍️ write_file</div>
+                <div class="text-slate-400 mt-1">สร้างโฟลเดอร์ให้อัตโนมัติ (mkdir recursive) และเขียนทับไฟล์เป้าหมายแบบสมบูรณ์</div>
+              </div>
+              <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                <div class="font-bold text-amber-300">✂️ edit</div>
+                <div class="text-slate-400 mt-1">ค้นหาและแทนที่ข้อความที่ตรงกัน <em>แบบมีแค่จุดเดียวเท่านั้น (Uniquely match)</em> ป้องกันการแก้ผิดจุด</div>
+              </div>
+              <div class="p-3 bg-slate-950 rounded-xl border border-slate-800">
+                <div class="font-bold text-rose-300">⚡ run_bash</div>
+                <div class="text-slate-400 mt-1">รันคำสั่ง Terminal Shell จริง มี Timeout 30 วินาที และรองรับ AbortSignal ดักยกเลิก</div>
+              </div>
+            </div>
+            <div class="bg-rose-950/30 p-3 rounded-lg border border-rose-500/30 text-xs text-rose-300">
+              <strong>⚠️ เครื่องมือเหล่านี้ไม่ใช่ Pure Functions:</strong> เครื่องมือเหล่านี้มี <strong>Side Effects</strong> โดยตรงต่อระบบไฟล์และกระบวนการทำงานในเครื่องของคุณ! จึงต้องระมัดระวังเหมือนเครื่องมือช่างไฟฟ้าของจริง
+            </div>
+          </div>
+
+          <!-- 4. tui.ts & 5. cli.ts -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+              <h2 class="!mt-0 text-base font-bold text-purple-400">4. tui.ts — โต๊ะประชาสัมพันธ์ (Front Desk)</h2>
+              <p class="text-xs text-slate-300">
+                ดูแลหน้าจอ Terminal ด้วยโมดูล <code>readline</code> ของ Node.js คอยรับคำสั่ง พิมพ์ผลลัพธ์แบบเรียลไทม์ และมีระบบ <strong>Busy State</strong>:
+              </p>
+              <ul class="text-xs text-slate-400 space-y-1 mt-2 list-disc pl-4">
+                <li>เมื่อกำลังประมวลผลอยู่ จะล็อกไม่ให้ผู้ใช้พิมพ์แทรกจนกว่าจะเสร็จ</li>
+                <li>ถ้ากด <code>Ctrl+C</code> ตอนกำลัง Busy จะส่งสัญญาณยกเลิก (Abort) ไปยัง Agent</li>
+                <li><code>tui.ts</code> ไม่รู้จัก LLM หรือ Tools เลย รู้จักแค่การแสดงผลข้อความ</li>
+              </ul>
+            </div>
+
+            <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+              <h2 class="!mt-0 text-base font-bold text-rose-400">5. cli.ts — รางปลั๊กพ่วง (Power Strip)</h2>
+              <p class="text-xs text-slate-300">
+                ทำหน้าที่เป็น <strong>Composition Root</strong> หรือจุดเดียวที่เสียบปลั๊กทุกชิ้นส่วนเข้าหากัน:
+              </p>
+              <ul class="text-xs text-slate-400 space-y-1 mt-2 list-disc pl-4">
+                <li>อ่าน Environment Variables: <code>NANOPI_API_KEY</code>, <code>NANOPI_MODEL</code></li>
+                <li>โหลดประวัติเก่าจาก <code>~/.nanopi/session.jsonl</code></li>
+                <li>สร้าง <code>AbortController</code> ใหม่ทุกครั้งที่ผู้ใช้ส่งคำสั่ง</li>
+                <li>เมื่อจบเทิร์น บันทึกข้อความใหม่ต่อท้ายไฟล์ (Append-only)</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Complete 1 Turn -->
+          <!-- BEGINNER WALKTHROUGH SCENARIO -->
+          <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 p-6 rounded-2xl border border-emerald-500/30 my-8 shadow-xl">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold mb-3">
+              💡 ตัวอย่างสถานการณ์จำลองจริงทีละวินาที (Step-by-Step Scenario Walkthrough)
+            </div>
+            <h3 class="!mt-0 text-lg font-bold text-white mb-2">
+              สมมุติผู้ใช้พิมพ์สั่งว่า: <span class="text-emerald-400 font-mono">"ช่วยแก้คำว่า bug เป็น fix ในไฟล์ index.html ให้หน่อย"</span>
+            </h3>
+            <p class="text-xs text-slate-300 mb-4">
+              นี่คือสิ่งที่เกิดขึ้นจริงภายใน 5 ไฟล์ในเวลาเพียง 5 วินาที:
+            </p>
+
+            <div class="space-y-3 font-sans text-xs">
+              <!-- Step 1 -->
+              <div class="flex gap-3 bg-slate-950/80 p-3 rounded-xl border border-slate-800 items-start">
+                <span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">1</span>
+                <div>
+                  <strong class="text-purple-300 font-mono">🛎️ tui.ts:</strong> รับข้อความที่คุณพิมพ์เข้ามา แล้วปรับสถานะเป็น <code class="text-amber-400">busy = true</code> (ล็อกไม่ให้พิมพ์ข้อความใหม่แทรก)
+                </div>
+              </div>
+
+              <!-- Step 2 -->
+              <div class="flex gap-3 bg-slate-950/80 p-3 rounded-xl border border-slate-800 items-start">
+                <span class="w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">2</span>
+                <div>
+                  <strong class="text-rose-300 font-mono">🔌 cli.ts:</strong> นำข้อความใส่ลงในสมุดโน้ต <code class="text-blue-300">Context</code> แล้วเรียก <code class="text-amber-300">runAgent()</code> ใน agent.ts
+                </div>
+              </div>
+
+              <!-- Step 3 -->
+              <div class="flex gap-3 bg-slate-950/80 p-3 rounded-xl border border-slate-800 items-start">
+                <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">3</span>
+                <div>
+                  <strong class="text-amber-300 font-mono">👷 agent.ts & 🗣️ llm.ts:</strong> ส่งสมุดโน้ตไปถามสมอง AI โมเดลตอบกลับมาว่า <em>"ขอใช้เครื่องมือ <code>read_file('index.html')</code> เพื่อดูโค้ดก่อน"</em>
+                </div>
+              </div>
+
+              <!-- Step 4 -->
+              <div class="flex gap-3 bg-slate-950/80 p-3 rounded-xl border border-slate-800 items-start">
+                <span class="w-6 h-6 rounded-full bg-blue-500/20 text-blue-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">4</span>
+                <div>
+                  <strong class="text-blue-300 font-mono">🧰 tools.ts:</strong> อ่านไฟล์ index.html บนฮาร์ดดิสก์จริง ได้เนื้อหาไฟล์กลับมา แล้วส่งให้ <code class="text-amber-300">agent.ts</code> จดบันทึกผลลัพธ์ลงสมุดโน้ต
+                </div>
+              </div>
+
+              <!-- Step 5 -->
+              <div class="flex gap-3 bg-slate-950/80 p-3 rounded-xl border border-slate-800 items-start">
+                <span class="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">5</span>
+                <div>
+                  <strong class="text-amber-300 font-mono">👷 agent.ts (วนลูปถามซ้ำ):</strong> ส่งเนื้อหาไฟล์กลับไปถาม AI อีกรอบ AI วิเคราะห์แล้วสั่ง <em>"เจอจุดแล้ว ขอใช้เครื่องมือ <code>edit(path, old_string='bug', new_string='fix')</code>"</em>
+                </div>
+              </div>
+
+              <!-- Step 6 -->
+              <div class="flex gap-3 bg-slate-950/80 p-3 rounded-xl border border-slate-800 items-start">
+                <span class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">6</span>
+                <div>
+                  <strong class="text-emerald-300 font-mono">🧰 tools.ts:</strong> ค้นหาคำว่า bug จุดเดียวแล้วแก้เป็น fix ทันที แล้วตอบกลับมาว่า <em>"แก้ไขเสร็จแล้ว 1 จุด"</em>
+                </div>
+              </div>
+
+              <!-- Step 7 -->
+              <div class="flex gap-3 bg-slate-950/80 p-3 rounded-xl border border-slate-800 items-start">
+                <span class="w-6 h-6 rounded-full bg-purple-500/20 text-purple-400 font-mono font-bold flex items-center justify-center shrink-0 text-[11px]">7</span>
+                <div>
+                  <strong class="text-purple-300 font-mono">🛎️ tui.ts:</strong> AI พิมพ์ตอบคุณว่า <em>"ผมได้แก้ไขคำว่า bug เป็น fix ให้เรียบร้อยแล้วครับ!"</em> แล้วปลดล็อกสถานะ <code class="text-emerald-400">busy = false</code> พร้อมรับคำสั่งถัดไปของคุณ!
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+            <h2 class="!mt-0 text-lg font-bold text-white">🔄 วงจรการทำงาน 1 รอบเต็ม (One Complete Turn)</h2>
+            <div class="mermaid bg-slate-950 p-4 rounded-xl border border-slate-800 my-4">
+flowchart TB
+    I["1. tui.ts รับคำสั่ง<br/>(Readline รับข้อความผู้ใช้)"] --> C["2. cli.ts จดลง Context<br/>(บันทึกเป็นข้อความใหม่ในสมุดโน้ต)"]
+    C --> A["3. agent.ts เริ่มลูป<br/>(สั่งเปิด while loop คุมงาน)"]
+    A --> L["4. llm.ts สตรีมข้อมูล<br/>(ส่งถาม AI และรับ SSE Stream)"]
+    L --> D{"Is there tool call?<br/>(AI สั่งเรียกใช้เครื่องมือหรือไม่?)"}
+    D -- "มี (Yes)" --> T["5. tools.ts ทำงานจริง<br/>(อ่าน/เขียนไฟล์ หรือรันคำสั่ง bash)"]
+    T --> A
+    D -- "ไม่มี (No)" --> I
+            </div>
+            <p class="text-xs md:text-sm text-slate-300 leading-relaxed">
+              สรุปหลักคิดทางสถาปัตยกรรม: <strong>Context คือสมุดโน้ต (The Notebook)</strong>, <strong>Events คือใบแจ้งสถานะ (Status Slips)</strong> และ <strong>CLI คือสายไฟเชื่อมโยง (The Wiring)</strong> การแยกบทบาทแบบนี้ทำให้เราสามารถเปลี่ยนหน้าจอ (เช่น ย้ายจาก Terminal ไปเป็น Web UI) หรือเปลี่ยนผู้ให้บริการ LLM ได้ทันทีโดยไม่ต้องแก้ Work Loop ส่วนกลางเลยแม้แต่บรรทัดเดียว!
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Right 1 Col: Quick Reference Card -->
+        <div class="space-y-6">
+          <div class="bg-slate-900/90 p-5 rounded-2xl border border-slate-800 sticky top-20">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-wider">สรุป 5 ไฟล์หลัก (ฉบับมือใหม่เข้าใจทันที)</h3>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">เปรียบเทียบชัดเจน</span>
+            </div>
+            <div class="space-y-3.5 text-xs">
+              <!-- 1. llm.ts -->
+              <div class="p-3 bg-slate-800/70 rounded-xl border border-slate-700">
+                <div class="flex justify-between font-mono font-bold text-slate-200">
+                  <span class="text-emerald-300">🗣️ src/llm.ts (ล่ามแปลภาษา)</span>
+                  <span class="text-emerald-400">~338 บรรทัด</span>
+                </div>
+                <div class="text-slate-300 mt-1.5 text-[11px] leading-relaxed">
+                  <strong>หน้าที่:</strong> คุยกับสมอง AI ผ่านสายโทรศัพท์อินเทอร์เน็ต
+                </div>
+                <div class="mt-2 space-y-1 bg-slate-950/60 p-2 rounded text-[11px] text-slate-400 border border-slate-800">
+                  <div>• <span class="text-emerald-400 font-semibold">SSE Stream:</span> เหมือน <em>"ก๊อกน้ำเปิดไหลทีละหยด"</em> ตัวหนังสือพิมพ์วิ่งออกมาทีละคำ</div>
+                  <div>• <span class="text-emerald-400 font-semibold">text_delta:</span> เศษคำแต่ละหยด เช่น "ส", "วัส", "ดี"</div>
+                  <div>• <span class="text-emerald-400 font-semibold">tool_call:</span> AI บอกว่า <em>"ช่วยหยิบเครื่องมืออ่านไฟล์ให้หน่อย"</em></div>
+                </div>
+              </div>
+
+              <!-- 2. agent.ts -->
+              <div class="p-3 bg-slate-800/70 rounded-xl border border-slate-700">
+                <div class="flex justify-between font-mono font-bold text-slate-200">
+                  <span class="text-amber-300">👷 src/agent.ts (โฟร์แมนคุมงาน)</span>
+                  <span class="text-amber-400">~218 บรรทัด</span>
+                </div>
+                <div class="text-slate-300 mt-1.5 text-[11px] leading-relaxed">
+                  <strong>หน้าที่:</strong> ไม่ลงมือแก้ไฟล์เอง แต่คอยสั่งการและจดบันทึก
+                </div>
+                <div class="mt-2 space-y-1 bg-slate-950/60 p-2 rounded text-[11px] text-slate-400 border border-slate-800">
+                  <div>• <span class="text-amber-400 font-semibold">while loop:</span> ลูปทำงานซ้ำ <em>"ถาม AI -> สั่งช่างทำ -> เอาผลกลับไปถาม AI"</em> จนเสร็จ</div>
+                  <div>• <span class="text-amber-400 font-semibold">max_tokens:</span> ป้องกันกรณี <em>"หมึกหมดกลางคัน"</em> ถ้าคำสั่งขาดห้ามนำไปรัน</div>
+                  <div>• <span class="text-amber-400 font-semibold">Abort:</span> ปุ่ม <em>"หยุดฉุกเฉิน"</em> เมื่องานถูกยกเลิก (Ctrl+C) ให้หยุดอย่างปลอดภัย</div>
+                </div>
+              </div>
+
+              <!-- 3. tools.ts -->
+              <div class="p-3 bg-slate-800/70 rounded-xl border border-slate-700">
+                <div class="flex justify-between font-mono font-bold text-slate-200">
+                  <span class="text-blue-300">🧰 src/tools.ts (กล่องเครื่องมือช่าง)</span>
+                  <span class="text-blue-400">~154 บรรทัด</span>
+                </div>
+                <div class="text-slate-300 mt-1.5 text-[11px] leading-relaxed">
+                  <strong>หน้าที่:</strong> ค้อน เลื่อย ไขควง ที่ลงมือแตะต้องไฟล์และคอมพิวเตอร์จริง
+                </div>
+                <div class="mt-2 space-y-1 bg-slate-950/60 p-2 rounded text-[11px] text-slate-400 border border-slate-800">
+                  <div>• <span class="text-blue-400 font-semibold">4 เครื่องมือ:</span> <code>read_file</code> (อ่าน), <code>write_file</code> (เขียน), <code>edit</code> (แก้เฉพาะจุด), <code>run_bash</code> (รันคำสั่ง)</div>
+                  <div>• <span class="text-blue-400 font-semibold">Truncate 200:</span> ถ้าไฟล์ยาวเป็นหมื่นบรรทัด จะตัดส่งแค่ <em>200 บรรทัดท้าย</em> ป้องกันสมุดโน้ตล้น</div>
+                </div>
+              </div>
+
+              <!-- 4. tui.ts -->
+              <div class="p-3 bg-slate-800/70 rounded-xl border border-slate-700">
+                <div class="flex justify-between font-mono font-bold text-slate-200">
+                  <span class="text-purple-300">🛎️ src/tui.ts (โต๊ะประชาสัมพันธ์)</span>
+                  <span class="text-purple-400">~91 บรรทัด</span>
+                </div>
+                <div class="text-slate-300 mt-1.5 text-[11px] leading-relaxed">
+                  <strong>หน้าที่:</strong> คอยคุยกับผู้ใช้ที่หน้าจอ Terminal
+                </div>
+                <div class="mt-2 space-y-1 bg-slate-950/60 p-2 rounded text-[11px] text-slate-400 border border-slate-800">
+                  <div>• <span class="text-purple-400 font-semibold">Readline:</span> รอรับข้อความที่คุณพิมพ์แล้วกด Enter</div>
+                  <div>• <span class="text-purple-400 font-semibold">Busy State:</span> ขึ้นป้าย <em>"กำลังทำงาน ห้ามกวน"</em> กันผู้ใช้พิมพ์แทรกตอน AI คิด</div>
+                </div>
+              </div>
+
+              <!-- 5. cli.ts -->
+              <div class="p-3 bg-slate-800/70 rounded-xl border border-slate-700">
+                <div class="flex justify-between font-mono font-bold text-slate-200">
+                  <span class="text-rose-300">🔌 src/cli.ts (รางปลั๊กพ่วงรวมสาย)</span>
+                  <span class="text-rose-400">~128 บรรทัด</span>
+                </div>
+                <div class="text-slate-300 mt-1.5 text-[11px] leading-relaxed">
+                  <strong>หน้าที่:</strong> เอาสายไฟของทั้ง 4 โมดูลมาเสียบปลั๊กรวมกันให้ทำงานได้
+                </div>
+                <div class="mt-2 space-y-1 bg-slate-950/60 p-2 rounded text-[11px] text-slate-400 border border-slate-800">
+                  <div>• <span class="text-rose-400 font-semibold">Composition Root:</span> สวิตช์เมนบอร์ดที่เปิดแล้วทั้งระบบทำงานพร้อมกัน</div>
+                  <div>• <span class="text-rose-400 font-semibold">Session JSONL:</span> สมุดบันทึกประวัติเซฟลงไฟล์ 1 บรรทัด = 1 ข้อความ เปิดใหม่ก็คุยต่อได้</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-800">
+              <div class="text-xs text-slate-400 mb-2">💡 สถิติขนาดของ nano-pi:</div>
+              <div class="flex items-center justify-between text-xs font-mono bg-slate-950 p-2.5 rounded-lg border border-slate-800">
+                <span class="text-slate-300">รวมโค้ดทั้งหมด:</span>
+                <span class="text-emerald-400 font-bold">~929 บรรทัด</span>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-2">
+                นี่คือขนาดที่กะทัดรัดที่สุดที่ยังคงความเป็น Production Coding Assistant อย่างครบถ้วน
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 2: CHAPTER 2 - STEP BY STEP (23 STEPS) -->
+    <section id="tab-ch2" class="tab-content hidden">
+      <div class="bg-slate-900/80 p-6 md:p-8 rounded-2xl border border-slate-800 mb-8">
+        <h2 class="!mt-0 text-xl md:text-2xl font-bold text-white flex items-center gap-3">
+          <span>🛠️ บทที่ 2: สร้าง nano-pi ทีละขั้นตอน (23 สเต็ปอย่างละเอียด)</span>
+        </h2>
+        <p class="text-slate-300 text-sm mt-2">
+          ติดตามเส้นทางของข้อมูล (Follow the Data) ในการประกอบ Coding Agent ทีละชิ้นส่วน จากลูปจำลอง จนถึงระบบ Session ที่บันทึกประวัติการสนทนาลงฮาร์ดดิสก์
+        </p>
+      </div>
+
+      <!-- Step Cards Grid -->
+      <div class="space-y-6">
+
+        <!-- Phase 1: The Core Loop & Types (Steps 1-3) -->
+        <div class="border-l-2 border-emerald-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-emerald-400 uppercase tracking-wide">ช่วงที่ 1: แกนกลางและโครงสร้างข้อมูล (Steps 1 - 3)</h3>
+          <p class="text-xs text-slate-400">กำหนดโมเดลทางความคิด (Mental Model) และนิยาม Type สำหรับการสนทนา</p>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-emerald-500/20 text-emerald-400">Step 01</span>
+            <span class="text-xs font-mono text-slate-400">src/agent.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">1. Start with the loop (เริ่มจากโครงลูป)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            เริ่มต้นด้วย <code>while (true)</code> ใน <code>runAgent()</code> ซึ่งเป็น <code>async generator</code> ที่ส่งผลลัพธ์ผ่าน <code>yield</code> ลูปนี้ไม่มีการล็อกจำนวนรอบตายตัว (No hard-coded step limit) จะหยุดก็ต่อเมื่อโมเดลตอบเสร็จ, ผู้ใช้กดยกเลิก, หรือระบบพัง
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-emerald-500/20 text-emerald-400">Step 02</span>
+            <span class="text-xs font-mono text-slate-400">src/llm.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">2. Define the translator's data (นิยามประเภทข้อมูลของล่าม)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            กำหนด TypeScript Types สำหรับ <code>Model</code> (apiKey, model, baseUrl, maxTokens) และ <code>Context</code> ซึ่งประกอบด้วย <code>systemPrompt?</code> และอาร์เรย์ <code>messages: Message[]</code> ทั้งหมดเป็น Plain JSON ไม่มีฟังก์ชันซ่อนอยู่ เพื่อให้บันทึกและโหลดกลับมาได้ง่าย
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-emerald-500/20 text-emerald-400">Step 03</span>
+            <span class="text-xs font-mono text-slate-400">src/llm.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">3. Receive the reply as a stream (รับคำตอบแบบสตรีมมิ่ง)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            ฟังก์ชัน <code>stream()</code> ประกาศเป็น <code>async function*</code> ส่งคืน <code>AsyncGenerator&lt;StreamEvent&gt;</code> โดยมี 4 เหตุการณ์: <code>text_delta</code>, <code>tool_call</code>, <code>done</code>, และ <code>error</code> ทำให้หน้าจอแสดงตัวอักษรวิ่งได้ทันทีโดยไม่ต้องรอให้โมเดลคิดจนจบ
+          </p>
+        </div>
+
+        <!-- Phase 2: Network & SSE Parsing (Steps 4-8) -->
+        <div class="border-l-2 border-blue-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-blue-400 uppercase tracking-wide">ช่วงที่ 2: การสื่อสารทางเครือข่ายและการแปลงโปรโตคอล (Steps 4 - 8)</h3>
+          <p class="text-xs text-slate-400">รับส่ง HTTP POST, ถอดรหัส SSE Chunks, และแปลงข้อความเข้าออกระหว่าง Format ภายในกับ OpenAI API</p>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-blue-500/20 text-blue-400">Step 04</span>
+            <span class="text-xs font-mono text-slate-400">src/llm.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">4. Send the request (ส่ง Request ไปยัง API)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            ยิง HTTP POST ไปที่ <code>/chat/completions</code> โดยแนบ <code>stream: true</code>, API Key ใน Header <code>Authorization: Bearer ...</code> และส่ง <code>AbortSignal</code> เข้าไปด้วยเพื่อเปิดโอกาสให้หยุดคำขอระหว่างทางได้
+          </p>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-blue-500/20 text-blue-400">Step 05</span>
+            <span class="text-xs font-mono text-slate-400">src/llm.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">5. Translate one update (ถอดรหัสบรรทัด SSE ทีละบรรทัด)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            <code>handleSSELine()</code> ตัดคำว่า <code>data: </code> ออกแล้ว Parse JSON ถ้าเป็นข้อความธรรมดาจะส่งออกทันที แต่ถ้าเป็น Tool Call arguments ที่ทยอยมาเป็นชิ้นๆ จะนำไปเก็บพักใน Buffer ตาม Index ก่อน
+          </p>
+        </div>
+
+        <!-- Step 6 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-blue-500/20 text-blue-400">Step 06</span>
+            <span class="text-xs font-mono text-slate-400">src/llm.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">6. Read every update (อ่าน Stream จนจบบอดี้)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            ใช้ <code>TextDecoder</code> แปลงไบต์เป็นข้อความ และมีตัวแปร <code>buf</code> คอยต่อข้อความที่ค้างอยู่ เมื่อ Stream จบสมบูรณ์ จึงทำการ <code>flushToolCalls()</code> เรียงตามลำดับ Index แล้วปล่อย Event <code>done</code>
+          </p>
+        </div>
+
+        <!-- Step 7 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-blue-500/20 text-blue-400">Step 07</span>
+            <span class="text-xs font-mono text-slate-400">src/llm.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">7. Convert notebook entries (แปลงสมุดโน้ตเป็น Message ของ OpenAI)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            <code>contextToOpenAIMessages()</code> แปลงรูปแบบภายในของ nanopi ให้อยู่ในฟอร์แมตที่ OpenAI คาดหวัง: แยก System Prompt เป็น role system, รวมบล็อกคำสั่งเครื่องมือเป็น <code>tool_calls</code>, และเปลี่ยนผลลัพธ์เครื่องมือเป็น role <code>tool</code>
+          </p>
+        </div>
+
+        <!-- Step 8 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-blue-500/20 text-blue-400">Step 08</span>
+            <span class="text-xs font-mono text-slate-400">src/llm.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">8. Add replies to the notebook (นำคำตอบโมเดลจดกลับลงสมุดโน้ต)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            ฟังก์ชัน <code>buildAssistantMessage()</code> และ <code>buildToolResultMessage()</code> ทำหน้าที่จัดระเบียบข้อความตอบกลับของ Assistant และผลลัพธ์ Tool Result ทั้งหมดให้พร้อมต่อท้ายอาร์เรย์ <code>context.messages</code>
+          </p>
+        </div>
+
+        <!-- Phase 3: The Tools Implementation (Steps 9-14) -->
+        <div class="border-l-2 border-amber-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-amber-400 uppercase tracking-wide">ช่วงที่ 3: กล่องเครื่องมือช่าง (Steps 9 - 14)</h3>
+          <p class="text-xs text-slate-400">การสร้าง Interface มาตรฐานของเครื่องมือ และเขียน 4 ฟังก์ชันอ่าน เขียน แก้ไฟล์ และรัน Terminal</p>
+        </div>
+
+        <!-- Step 9 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-amber-500/20 text-amber-400">Step 09</span>
+            <span class="text-xs font-mono text-slate-400">src/agent.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">9. Give every tool one shape (กำหนดสัญญามาตรฐานให้ทุกเครื่องมือ)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            อินเตอร์เฟส <code>AgentTool</code> กำหนดว่าเครื่องมือทุกชิ้นต้องมี: <code>name</code>, <code>description</code>, <code>parameters</code> (อธิบายฟิลด์ด้วย JSON Schema), และฟังก์ชัน <code>execute(args, signal)</code> ที่คืนค่าเป็น <code>Promise&lt;string&gt;</code>
+          </p>
+        </div>
+
+        <!-- Step 10 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-amber-500/20 text-amber-400">Step 10</span>
+            <span class="text-xs font-mono text-slate-400">src/tools.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">10. Open the toolbox (เปิดกล่องเครื่องมือ)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            เริ่มต้นไฟล์ <code>tools.ts</code> เครื่องมือในนี้ไม่มีสิทธิ์เข้าถึงหรือแก้ไขสมุดโน้ต (Context) โดยตรง มันรับแค่ Parameter และคืนค่าเป็นข้อความธรรมดา เพื่อแยกตรรกะการรันเครื่องมือออกจากสเตตของ Agent
+          </p>
+        </div>
+
+        <!-- Step 11 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-amber-500/20 text-amber-400">Step 11</span>
+            <span class="text-xs font-mono text-slate-400">src/tools.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">11. Read a file (อ่านไฟล์โดยไม่ทำให้ Context ล้น)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            <code>read_file</code> อ่านไฟล์ UTF-8 ถ้าเกิน 200 บรรทัด ฟังก์ชัน <code>truncateOutput()</code> จะเซฟไฟล์ฉบับเต็มไว้ในโฟลเดอร์ Temporary ของ OS แล้วตัดส่งเฉพาะ <strong>200 บรรทัดท้ายสุด</strong> กลับไปให้โมเดลอ่าน เพราะข้อผิดพลาดและผลลัพธ์สำคัญมักอยู่ท้ายไฟล์
+          </p>
+        </div>
+
+        <!-- Step 12 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-amber-500/20 text-amber-400">Step 12</span>
+            <span class="text-xs font-mono text-slate-400">src/tools.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">12. Write a file (เขียนไฟล์ทั้งก้อน)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            <code>write_file</code> ใช้ <code>fs.mkdir(..., { recursive: true })</code> เพื่อสร้างโฟลเดอร์พ่อแม่ที่ยังไม่มี แล้วเขียนทับไฟล์เป้าหมายทั้งหมด ไม่มีการต่อท้ายหรือรวมไฟล์ เมื่อเขียนเสร็จจะรายงาน path และจำนวนตัวอักษรที่บันทึก
+          </p>
+        </div>
+
+        <!-- Step 13 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-amber-500/20 text-amber-400">Step 13</span>
+            <span class="text-xs font-mono text-slate-400">src/tools.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">13. Edit one exact passage (แก้ไขเฉพาะจุดที่ตรงกันเป๊ะๆ)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            <code>edit</code> ใช้ <code>old_string</code> แทนการระบุเลขบรรทัด (เพราะเลขบรรทัดจะเลื่อนหลังจากการแก้ครั้งก่อนหน้า) และบังคับว่าต้องพบข้อความเดิม <strong>เพียง 1 จุดเท่านั้น</strong> หากพบ 0 จุด หรือพบมากกว่า 1 จุด จะ throw error ปฏิเสธการแก้ไขทันทีเพื่อความปลอดภัย
+          </p>
+        </div>
+
+        <!-- Step 14 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-amber-500/20 text-amber-400">Step 14</span>
+            <span class="text-xs font-mono text-slate-400">src/tools.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">14. Run a command (สั่งรัน Shell ในคอมพิวเตอร์)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            <code>run_bash</code> รันคำสั่ง bash โดยตั้ง Timeout ไว้ที่ 30 วินาที หากคำสั่งล้มเหลว จะแปลง Exit Code และ stderr เป็นข้อความส่งกลับไปให้โมเดลอ่าน แทนที่จะโยน Error ทิ้ง เพื่อให้โมเดลสามารถวิเคราะห์และแก้ปัญหาเองต่อได้
+          </p>
+        </div>
+
+        <!-- Phase 4: Agent Logic & Safeguards (Steps 15-20) -->
+        <div class="border-l-2 border-purple-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-purple-400 uppercase tracking-wide">ช่วงที่ 4: ตรรกะลูปและระบบป้องกันภัย (Steps 15 - 20)</h3>
+          <p class="text-xs text-slate-400">ประกอบลูป, ป้องกัน Tool Call แหว่งจาก max_tokens, จัดการ Abort อย่างขาวสะอาด, และย่อสรุป Context</p>
+        </div>
+
+        <!-- Step 15 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-purple-500/20 text-purple-400">Step 15</span>
+            <span class="text-xs font-mono text-slate-400">src/agent.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">15. Define what the agent reports (นิยามสิ่งที่ Agent รายงาน)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            นิยาม <code>AgentEvent</code> ระดับสูง 4 แบบ: <code>assistant_text</code>, <code>tool_call</code>, <code>tool_result</code>, และ <code>turn_end</code> หน้าจอและ CLI จะรับรู้แค่ 4 เหตุการณ์นี้ โดยไม่ต้องยุ่งกับโปรโตคอล SSE อีกเลย
+          </p>
+        </div>
+
+        <!-- Step 16 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-purple-500/20 text-purple-400">Step 16</span>
+            <span class="text-xs font-mono text-slate-400">src/agent.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">16. Make the loop work (ทำให้ลูปทำงานสมบูรณ์)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            เมื่อรวบรวม Tool Calls ได้ จะรันแบบเรียงตามลำดับ (Serially) ทีละคำสั่ง หากไม่พบชื่อ Tool จะสร้าง Error ผลลัพธ์ส่งให้โมเดลอ่าน แล้ววนลูปกลับไปถามโมเดลใหม่จนกว่าจะไม่มี Tool Call เหลืออยู่
+          </p>
+        </div>
+
+        <!-- Step 17 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-purple-500/20 text-purple-400">Step 17</span>
+            <span class="text-xs font-mono text-slate-400">src/agent.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">17. Never execute a truncated tool call (ห้ามรัน Tool Call ที่ถูกตัดทอนเด็ดขาด!)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            <span class="text-rose-400 font-semibold">กฎเหล็กความปลอดภัย:</span> เมื่อ API ส่งเหตุผล <code>max_tokens</code> แปลว่าข้อความถูกตัด พารามิเตอร์ของ Tool อาจขาดครึ่ง nanopi จะ <strong>ไม่ยอมรันคำสั่งนั้นอย่างเด็ดขาด</strong> แต่จะส่งข้อความแจ้ง Error คู่กันกลับไปให้โมเดลลองใหม่ทันที
+          </p>
+        </div>
+
+        <!-- Step 18 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-purple-500/20 text-purple-400">Step 18</span>
+            <span class="text-xs font-mono text-slate-400">src/agent.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">18. Stop without leaving broken history (ยกเลิกงานโดยไม่ทิ้งประวัติที่พัง)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            เมื่อตรวจพบการกด <code>Ctrl+C</code> (Abort) ระหว่างรัน Tools เครื่องมือที่ยังไม่ได้รันจะถูกเติมด้วยผลลัพธ์ <code>error: aborted</code> เพื่อให้ประวัติในสมุดโน้ตมีคู่คำสั่งและผลลัพธ์ครบสมบูรณ์ ป้องกันไม่ให้ API ครั้งต่อไปพ่น HTTP 400
+          </p>
+        </div>
+
+        <!-- Step 19 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-purple-500/20 text-purple-400">Step 19</span>
+            <span class="text-xs font-mono text-slate-400">src/agent.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">19. Treat request failure differently from abort (แยกแยะเน็ตหลุดกับการยกเลิก)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            ถ้าเครือข่ายพังหรือเซิร์ฟเวอร์ตาย Agent จะบันทึกเฉพาะข้อความที่ได้รับมาก่อนหน้า และจบเทิร์นด้วยสถานะ <code>error</code> ทันที โดยไม่มีการ Retry แบบวนลูปไม่สิ้นสุด (Prevent infinite loop)
+          </p>
+        </div>
+
+        <!-- Step 20 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-purple-500/20 text-purple-400">Step 20</span>
+            <span class="text-xs font-mono text-slate-400">src/agent.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">20. Compact the notebook (การย่อบีบอัดสมุดโน้ตเมื่อข้อความยาวเกินไป)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            เมื่อข้อความในประวัติสะสมถึง 50 ข้อความขึ้นไป ฟังก์ชัน <code>compactContext()</code> จะเก็บข้อความ 20 อันล่าสุดไว้เป๊ะๆ ส่วนข้อความเก่ากว่านั้นทั้งหมดจะถูกส่งไปให้โมเดลสรุปเป็นก้อนข้อความสั้นๆ ก้อนเดียว ทำให้เหลือประวัติเพียง 21 ข้อความ ป้องกัน Context Window ล้น
+          </p>
+        </div>
+
+        <!-- Phase 5: UI, CLI & Persistence (Steps 21-23) -->
+        <div class="border-l-2 border-rose-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-rose-400 uppercase tracking-wide">ช่วงที่ 5: หน้าจอ การประกอบระบบ และการเซฟประวัติ (Steps 21 - 23)</h3>
+          <p class="text-xs text-slate-400">สร้าง TUI, ต่อสายทุกโมดูลเข้าด้วยกันใน cli.ts, และบันทึกลงไฟล์ session.jsonl</p>
+        </div>
+
+        <!-- Step 21 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-rose-500/20 text-rose-400">Step 21</span>
+            <span class="text-xs font-mono text-slate-400">src/tui.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">21. Add the terminal user interface (สร้างหน้าจอ Terminal)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            สร้างคลาส <code>Tui</code> ที่มีเมธอด <code>printText()</code>, <code>printToolCall()</code>, <code>printToolResult()</code> และจัดการสถานะ <code>busy</code> เพื่อไม่ให้คำสั่งใหม่ซ้อนทับงานเก่า
+          </p>
+        </div>
+
+        <!-- Step 22 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-rose-500/20 text-rose-400">Step 22</span>
+            <span class="text-xs font-mono text-slate-400">src/cli.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">22. Connect all five modules (เสียบสายเชื่อมต่อ 5 โมดูลเข้าด้วยกัน)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            ใน <code>cli.ts</code> นำ <code>Model</code>, <code>Context</code>, <code>builtinTools</code>, <code>Tui</code> และ <code>runAgent</code> มาเสียบรวมกัน จัดการ <code>AbortController</code> รายครั้ง และใช้บล็อก <code>switch</code> แยกประเภท Event ส่งไปแสดงผลบนหน้าจอ
+          </p>
+        </div>
+
+        <!-- Step 23 -->
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-rose-500/20 text-rose-400">Step 23</span>
+            <span class="text-xs font-mono text-slate-400">src/cli.ts</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">23. Save the conversation (บันทึกบทสนทนาลง session.jsonl)</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">
+            บันทึกข้อความแบบ JSON Lines (หนึ่ง Message ต่อหนึ่งบรรทัด) ลงใน <code>~/.nanopi/session.jsonl</code> โดยเขียนเฉพาะส่วนใหม่ที่เพิ่มเข้ามา (Append-only) เมื่อเปิดโปรแกรมใหม่ครั้งหน้า จะโหลดประวัติเดิมกลับขึ้นมาทำงานต่อได้ทันที
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 3: COMPARISONS -->
+    
+    <!-- TAB: INSIDE PI (PRODUCTION ARCHITECTURE) -->
+    <section id="tab-inside-pi" class="tab-content hidden space-y-6">
+      <div class="bg-slate-900/80 p-6 md:p-8 rounded-2xl border border-slate-800">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold mb-3">
+          🏭 Deep Dive into Production Pi (earendil-works/pi)
+        </div>
+        <h2 class="!mt-0 text-xl md:text-2xl font-bold text-white">
+          Inside Pi: สถาปัตยกรรมระดับ Production จริง (30 สเต็ป)
+        </h2>
+        <p class="text-slate-300 text-sm mt-2">
+          เปรียบเทียบจาก <strong>nanopi</strong> (ฉบับมินิมอลเพื่อการเรียนรู้) สู่ <strong>Pi ตัวจริง</strong> ที่ใช้งานจริงในโลกการทำงาน ซึ่งมีระบบจัดการ Session Tree, การรัน Tools แบบคู่ขนาน (Parallel Execution), การเข้าคิวเขียนไฟล์ (Write Queue), และการโหลด Skill Index
+        </p>
+      </div>
+
+      <div class="space-y-6">
+        
+        <div class="border-l-2 border-indigo-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-indigo-400 uppercase tracking-wide">ช่วง A: เปิดเวิร์กช็อปและเตรียม Session (Steps 01 - 08)</h3>
+          <p class="text-xs text-slate-400">การตรวจหากฎของโปรเจกต์ (CLAUDE.md), การลงทะเบียน Tools และสารบัญ Skills ก่อนเริ่มรับคำสั่ง</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 01</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">01 · The command opens a very small door</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The front door is only a few lines. It prepares the process and gives main the arguments after the Node executable and script name. It does not contain the model loop.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 02</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">02 · Prepare a session, not just a text box</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The coordinator needs a working directory, model/authentication services, settings, resources, and a notebook. The SDK&#39;s session factory brings them together. If a resource loader was already supplied, this function does not reload it here.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 03</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">03 · Collect the workshop rules</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">These are the workshop&#39;s posted rules: project conventions, commands, and cautions. Pi walks the directory ancestry rather than scanning every child folder. Global instructions come first, then ancestor context in outer-to-inner order.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 04</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">04 · Choose what the model may ask Pi to do</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The default toolbox has four tools. A tool name is not an action yet; it tells the model which actions it may request. Settings and explicit selections can change the list. Additional built-ins include grep, find, and ls.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 05</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">05 · Put the skill index on the desk</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">Think of a library catalog, not a stack of every book. Descriptions help the model select a skill; the location tells it where to fetch the full instructions. Discovery can inspect files without inserting all their bodies into the model&#39;s context.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 06</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">06 · Assemble the model&#39;s standing instructions</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">This is the coordinator&#39;s briefing sheet. The default prompt includes tool snippets and guidelines; project instructions and skill metadata are appended. A custom prompt can replace the default base.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 07</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">07 · Open the notebook at the active branch</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">A saved session can contain branches, settings changes, and summaries—not just chat bubbles. Pi rebuilds the conversation for the selected branch. A new session has no old conversation to restore.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 08</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">08 · Put a front desk on the same session</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The same coordinator can serve a terminal UI, a program speaking RPC, or a non-interactive request. Here we follow the ordinary interactive route, not the startup-benchmark special case visible in the excerpt.</p>
+        </div>
+        <div class="border-l-2 border-cyan-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-cyan-400 uppercase tracking-wide">ช่วง B: รับคำสั่งและจัดเส้นทางงาน (Steps 09 - 12)</h3>
+          <p class="text-xs text-slate-400">การแยกแยะ Slash Commands (/skill, /compact), การดึงเนื้อหา Skill เข้ามาใช้งานทันที</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 09</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">09 · Hand the message to the coordinator</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">For an ordinary idle prompt, the front desk passes your text to the session and awaits the run. Interface commands can be handled earlier, and messages typed during an active run have queueing behavior.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 10</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">10 · Sort commands, ordinary text, and queued input</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">A slash does not always mean “replace text.” An extension command runs a registered handler; a prompt template expands text; a skill command loads instructions. An input hook may also transform or handle the message.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 11</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">11 · An explicit skill opens the book immediately</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">This is not the catalog path from step 05. When you explicitly invoke a known skill, Pi itself reads the file and inserts its body. The model does not first need to request a read tool call to obtain that body.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 12</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">12 · Let extensions add context before the run</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">Extensions are plug-ins at defined points, not a second copy of the loop. This hook can add messages and change the run&#39;s system prompt. Other hooks participate in input, context, provider requests, tool calls/results, and session events.</p>
+        </div>
+        <div class="border-l-2 border-emerald-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-emerald-400 uppercase tracking-wide">ช่วง C: ถาม-ทำ-ถามซ้ำ (The Production Loop: Steps 13 - 23)</h3>
+          <p class="text-xs text-slate-400">การรัน runAgentLoop, Provider Adapter Matrix, Parallel Tool Execution, และ Write Queue ต่อไฟล์</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 13</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">13 · Enter the loop actually used by this CLI</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The session handles product concerns; Agent manages a run and its transcript state. Here it hands a snapshot, configuration, event callback, cancellation signal, and model-stream function to the loop.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 14</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">14 · Pack three things for the model</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The model receives a briefing, a conversation, and a toolbox description. Pi-specific message types are converted at this boundary; they need not all look like provider messages throughout the rest of the program.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 15</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">15 · Use the selected provider, not a hardcoded vendor</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The SDK supplies the loop&#39;s stream function. That function reaches the model runtime, which prepares the request and delegates to the selected provider implementation. The loop does not have to know a particular vendor&#39;s wire format.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 16</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">16 · Show progress before the reply is complete</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">Streaming is a sequence of events, not many separate user messages. The interface can draw text and tool-call progress while Pi maintains a partial assistant message. Finalization happens when the response ends.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 17</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">17 · Decide whether there is work to do</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">A reply can include both text and tool calls. Pi inspects the structured content—not whether the text happens to say “I&#39;ll read the file.” Truncated arguments are rejected even if a best-effort parser could turn them into JSON.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 18</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">18 · Decide which tool calls can run together</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">There is no universal “all tools always run one at a time” rule. The loop consults both its execution configuration and the tools&#39; declarations. In the parallel path, returned transcript messages retain tool-call order even if work finishes in a different order.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 19</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">19 · Check the request before touching anything</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The model proposes; the runtime checks. A valid-looking sentence is not enough: the tool must exist, its arguments must pass validation, and any before-tool policy must allow the call.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 20</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">20 · Let the tool do the physical work</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">This is where an enabled tool may read a file, start a shell, or change disk contents. Progress updates go back to listeners. Thrown errors are captured for the tool result; after-tool hooks can further modify the finalized result.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 21</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">21 · For a README, the tool reads bytes</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">If our example request leads the model to call read, this text branch gets the file contents. Offset and limit choose lines; truncation keeps a large file from swallowing the whole context budget. The tool can report how to request the next portion.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 22</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">22 · If the task edits files, writes queue per file</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">This is an optional branch, not something a read-only README request must do. Two same-file edits should not race just because tool calls were scheduled in parallel. The mutation queue waits for the earlier operation, then releases the next one in a finally block.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 23</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">23 · Bring the result back to the model</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">A tool does not normally supply the final answer by itself. It supplies evidence to the conversation, so the model can explain the README or choose another action. A tool result may be an error; that is still information the model can use.</p>
+        </div>
+        <div class="border-l-2 border-amber-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-amber-400 uppercase tracking-wide">ช่วง D: บันทึกสมุดโน้ตแบบแตกกิ่งก้าน (Steps 24 - 26)</h3>
+          <p class="text-xs text-slate-400">การใช้ parentId สร้าง Message Tree และการเขียนประวัติลง JSONL อย่างปลอดภัย</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 24</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">24 · Completed messages become notebook entries</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">Pi listens to its own events. Finalized user messages, assistant messages, and tool results can be recorded as they arrive. A stream of individual text deltas does not create a notebook line for every token.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 25</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">25 · A parent link turns the notebook into a tree</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">JSONL is physically a sequence of lines, but id and parentId describe a tree. The active leaf says which conversation path you are on. Appending a new message makes it a child of that leaf.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 26</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">26 · JSONL is simple storage, not a crash guarantee</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The usual session location is under ~/.pi/agent/sessions/, grouped by an encoded working-directory path. This method can defer a fresh session&#39;s initial write, flush its buffered entries, or append a later entry.</p>
+        </div>
+        <div class="border-l-2 border-rose-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-rose-400 uppercase tracking-wide">ช่วง E: บีบอัด Context และเคลียร์สถานะ (Steps 27 - 30)</h3>
+          <p class="text-xs text-slate-400">การเช็ก Token Limit, การสร้างข้อความสรุป, และการส่ง Settle Event เพื่อกลับสู่สถานะพร้อมรับคำสั่งใหม่</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 27</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">27 · Check space at the next-response boundary</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">Action in code: AgentSession._compactBeforeNextAssistantResponse(). This is installed in the next-turn preparation hook. Usage-backed estimates also account for messages added after the last valid usage; without usable usage, Pi falls back to a size estimate.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 28</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">28 · Ask for a summary, not a continuation</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The model should summarize the old conversation, not continue its instructions as a fresh task. Pi serializes the conversation and wraps it inside a summarization request. A tool call from the summarizer is rejected.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 29</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">29 · Send the summary plus the recent pages</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">Compaction changes what Pi sends next, not the fact that earlier entries existed. After successful compaction, the session records a summary and a keep boundary, then rebuilds agent messages from the selected branch.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 30</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">30 · A loop ending is not quite the same as being idle</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The coordinator may still need to retry a recoverable error, compact context, or handle queued input after the low-level loop ends. It then clears temporary prompt state, flushes pending messages, and emits its settled signal. Cancellation and failures can also reach cleanup; a settled run is not automatically a successful task.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-comparisons" class="tab-content hidden space-y-8">
+      <div class="bg-slate-900/80 p-6 md:p-8 rounded-2xl border border-slate-800">
+        <h2 class="!mt-0 text-xl md:text-2xl font-bold text-white">
+          ⚖️ ตัวอย่างเปรียบเทียบเชิงลึก (In-Depth Comparative Analysis)
+        </h2>
+        <p class="text-slate-300 text-sm mt-2">
+          เพื่อความเข้าใจที่กระจ่างชัด นี่คือการเปรียบเทียบ 5 มิติสำคัญที่แบ่งแยกระหว่าง "โมเดลแชททั่วไป" กับ "AI Coding Agent ตัวจริง"
+        </p>
+      </div>
+
+      <!-- Comparison 1 -->
+      <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs font-bold font-mono">COMPARISON 1</span>
+          <h3 class="!mt-0 !mb-0 text-lg font-bold text-white">Chatbot ทั่วไป VS AI Coding Agent Loop</h3>
+        </div>
+        <p class="text-xs md:text-sm text-slate-300 mb-4">
+          ความแตกต่างสำคัญที่สุดคือ <strong>"Autonomous Feedback Loop"</strong>: Chatbot ทั่วไปพูดจบแล้วหยุดทันที แต่ Coding Agent จะลงมือทำ ดูผลลัพธ์ แล้วแก้ปัญหาต่อเองจนเสร็จ
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Chatbot -->
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800">
+            <div class="text-rose-400 font-bold text-sm mb-2 flex items-center gap-1.5">
+              <span>💬 Chatbot ธรรมดา (เช่น ChatGPT Web)</span>
+            </div>
+            <ul class="text-xs text-slate-300 space-y-2 list-disc pl-4">
+              <li><strong>Single-turn Request/Response:</strong> ผู้ใช้ถาม → AI ตอบเป็นตัวหนังสือ → จบกระบวนการ</li>
+              <li><strong>ไม่มีผลต่อโลกจริง:</strong> AI แนะนำโค้ดใน Markdown แต่ผู้ใช้ต้องคัดลอกไปวางเองใน IDE</li>
+              <li><strong>ไม่รู้ว่าโค้ดที่ให้รันผ่านไหม:</strong> ถ้าโค้ดพัง ผู้ใช้ต้องก๊อป Error กลับมาแปะถามใหม่รอบสอง</li>
+            </ul>
+          </div>
+          <!-- Agent -->
+          <div class="p-4 rounded-xl bg-slate-950 border border-emerald-500/30">
+            <div class="text-emerald-400 font-bold text-sm mb-2 flex items-center gap-1.5">
+              <span>🤖 AI Coding Agent (เช่น nanopi, Claude Code)</span>
+            </div>
+            <ul class="text-xs text-slate-300 space-y-2 list-disc pl-4">
+              <li><strong>Multi-turn Autonomous Loop:</strong> ผู้ใช้สั่ง → Agent สั่งเปิดอ่านไฟล์ → อ่านแล้วคิด → แก้ไฟล์ → รันเทสต์ → ถ้าเทสต์ตก Agent สั่งแก้ไฟล์ซ้ำจนกว่าเทสต์จะผ่าน</li>
+              <li><strong>มี Side Effects จริง:</strong> สร้าง แก้ ลบไฟล์ และรัน Terminal Shell บนเครื่องได้จริง</li>
+              <li><strong>ตรวจผลลัพธ์ด้วยตัวเอง:</strong> อ่าน stderr และ stdout ของ bash มาปรับแผนเองแบบ Real-time</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparison 2 -->
+      <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="px-2.5 py-1 rounded bg-amber-500/20 text-amber-400 text-xs font-bold font-mono">COMPARISON 2</span>
+          <h3 class="!mt-0 !mb-0 text-lg font-bold text-white">Pure Functions VS Impure Tools (Side Effects)</h3>
+        </div>
+        <p class="text-xs md:text-sm text-slate-300 mb-4">
+          ทำไมฟังก์ชันใน <code>tools.ts</code> จึงเป็น <strong>Impure Functions</strong> และมีผลกระทบความปลอดภัยอย่างไร?
+        </p>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left text-slate-300 border border-slate-800 rounded-lg overflow-hidden">
+            <thead class="bg-slate-950 text-slate-200 uppercase font-mono">
+              <tr>
+                <th class="p-3">มิติการเปรียบเทียบ</th>
+                <th class="p-3 text-blue-400">Pure Function (ฟังก์ชันบริสุทธิ์)</th>
+                <th class="p-3 text-amber-400">Impure Tool ใน Agent (เครื่องมือจริง)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800 bg-slate-900/50">
+              <tr>
+                <td class="p-3 font-semibold text-slate-200">ผลลัพธ์เมื่อ Input เหมือนเดิม</td>
+                <td class="p-3">ให้ค่าเดิมเสมอ (เช่น <code>add(2, 3) => 5</code>)</td>
+                <td class="p-3">อาจให้ผลไม่เหมือนเดิม ขึ้นอยู่กับสถานะในเครื่อง (เช่น อ่านไฟล์ที่ถูกแก้ไปแล้ว)</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-slate-200">ผลกระทบภายนอก (Side Effects)</td>
+                <td class="p-3 text-emerald-400">ไม่มีเลย ไม่แตะต้องฮาร์ดแวร์หรือเน็ต</td>
+                <td class="p-3 text-rose-400">เขียนทับไฟล์ในฮาร์ดดิสก์, รันคำสั่ง bash ลบข้อมูล, จองหน่วยความจำ</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-slate-200">การยกเลิก (Undo/Rollback)</td>
+                <td class="p-3">ไม่ต้องทำอะไร เพราะไม่ได้เปลี่ยนสเตต</td>
+                <td class="p-3">การกดยกเลิก (Abort) <u>ไม่สามารถย้อนคืน</u> การเขียนไฟล์หรือคำสั่งที่รันไปแล้วได้!</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Comparison 3 -->
+      <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="px-2.5 py-1 rounded bg-blue-500/20 text-blue-400 text-xs font-bold font-mono">COMPARISON 3</span>
+          <h3 class="!mt-0 !mb-0 text-lg font-bold text-white">Normal HTTP REST Response VS SSE Streaming</h3>
+        </div>
+        <p class="text-xs md:text-sm text-slate-300 mb-4">
+          ทำไม <code>llm.ts</code> จึงต้องใช้ <strong>Server-Sent Events (SSE)</strong> และยอมรับความยุ่งยากในการรวม Chunks?
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="p-4 bg-slate-950 rounded-xl border border-slate-800">
+            <strong class="text-slate-200 block mb-1">❌ ถ้าใช้ Normal HTTP Response (รอทั้งก้อน):</strong>
+            <p class="text-slate-400 mb-2">เมื่อโมเดลกำลังคิดคำตอบ 4,000 tokens หน้าจอจะค้างนิ่งสนิทเป็นเวลา 20-30 วินาที ผู้ใช้จะไม่รู้เลยว่าโปรแกรมค้างหรือกำลังทำงานอยู่</p>
+            <div class="font-mono bg-slate-900 p-2 rounded text-slate-300">
+              POST /chat -> [รอ 25 วินาที...] -> { "content": "hello world" }
+            </div>
+          </div>
+          <div class="p-4 bg-slate-950 rounded-xl border border-blue-500/30">
+            <strong class="text-blue-300 block mb-1">✅ เมื่อใช้ SSE Streaming (แบบใน nanopi):</strong>
+            <p class="text-slate-400 mb-2">ตัวอักษรแรกปรากฏบนหน้าจอภายใน 400ms (Time-to-first-token ต่ำมาก) ผู้ใช้เห็นความคิดของโมเดลไหลออกมาทันที และสามารถกดยกเลิก (Ctrl+C) ได้ทันทีถ้าโมเดลเริ่มตอบออกทะเล</p>
+            <div class="font-mono bg-slate-900 p-2 rounded text-emerald-400">
+              data: {"delta": {"content": "Hel"}}<br>
+              data: {"delta": {"content": "lo "}}<br>
+              data: {"delta": {"content": "World"}}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparison 4 -->
+      <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="px-2.5 py-1 rounded bg-purple-500/20 text-purple-400 text-xs font-bold font-mono">COMPARISON 4</span>
+          <h3 class="!mt-0 !mb-0 text-lg font-bold text-white">Stateless Model VS Stateful Agent (Context Notebook)</h3>
+        </div>
+        <p class="text-xs md:text-sm text-slate-300 mb-3">
+          <strong>ความจริงที่หลายคนเข้าใจผิด:</strong> ตัวโมเดล AI (LLM Server) <em>"ไม่มีความจำเลยแม้แต่น้อย" (Stateless)</em> ทุกคำขอที่ยิงไปที่เซิร์ฟเวอร์ มันจะลืมทุกอย่างทันทีที่ตอบเสร็จ
+        </p>
+        <p class="text-xs md:text-sm text-slate-300">
+          สิ่งที่ทำให้รู้สึกว่า Agent มีความจำต่อเนื่อง คือ <strong>สมุดโน้ต (Context)</strong> ใน <code>nanopi</code>:
+        </p>
+        <div class="my-3 p-3 bg-slate-950 rounded-xl border border-slate-800 font-mono text-xs text-slate-300 space-y-1">
+          <div><span class="text-slate-500">รอบที่ 1:</span> ส่ง [User: "แก้บั๊กใน app.ts"] -> AI ขอ [read_file "app.ts"]</div>
+          <div><span class="text-slate-500">รอบที่ 2:</span> ส่ง [User: "แก้บั๊ก", Assistant: "ขออ่านไฟล์", ToolResult: "โค้ดใน app.ts"] -> AI ส่ง [edit ...]</div>
+          <div><span class="text-slate-500">รอบที่ 3:</span> ส่ง [ประวัติทั้งหมด + ผลการ edit] -> AI ส่งข้อความ "แก้ไขเสร็จเรียบร้อยครับ"</div>
+        </div>
+        <p class="text-xs text-slate-400">
+          ดังนั้น ถ้าสมุดโน้ตหนาเกินไป (Context Window เต็ม) จึงต้องมี <strong>Step 20: Compact the notebook</strong> เพื่อสรุปย่อประวัติเก่าๆ ไม่ให้ค่าใช้จ่าย Token พุ่งสูงจนเกินขีดจำกัด
+        </p>
+      </div>
+
+      <!-- Comparison 5 -->
+      <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="px-2.5 py-1 rounded bg-rose-500/20 text-rose-400 text-xs font-bold font-mono">COMPARISON 5</span>
+          <h3 class="!mt-0 !mb-0 text-lg font-bold text-white">nanopi (Teaching Agent) VS Production Frameworks (Pi / Claude Code / Cursor)</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left text-slate-300 border border-slate-800 rounded-lg overflow-hidden">
+            <thead class="bg-slate-950 text-slate-200 font-mono uppercase">
+              <tr>
+                <th class="p-3">ฟีเจอร์ / ความสามารถ</th>
+                <th class="p-3 text-amber-400">nanopi (ฉบับเรียนรู้ ~900 บรรทัด)</th>
+                <th class="p-3 text-emerald-400">Production Agent (Pi, Claude Code, Cursor)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800 bg-slate-900/50">
+              <tr>
+                <td class="p-3 font-semibold text-slate-200">การรองรับค่ายโมเดล (Provider)</td>
+                <td class="p-3">รองรับเฉพาะ OpenAI-compatible 1 มาตรฐาน</td>
+                <td class="p-3">รองรับ Anthropic, Google Gemini, Ollama, Bedrock พร้อม Provider Adapter</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-slate-200">ความปลอดภัยของคำสั่ง Shell</td>
+                <td class="p-3 text-rose-400">ไม่มี Sandbox, ไม่มี Allowlist, สั่งรันได้ทุกคำสั่งของผู้ใช้</td>
+                <td class="p-3 text-emerald-400">มี Confirmation Dialog, รันใน Docker/Sandbox ป้องกันลบไฟล์ระบบ</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-slate-200">การรัน Tools พร้อมกัน</td>
+                <td class="p-3">รันแบบเรียงแถวทีละตัว (Serial)</td>
+                <td class="p-3">รันคู่ขนาน (Parallel execution) สำหรับคำสั่งที่ไม่มีผลกระทบต่อกัน เช่น อ่านหลายไฟล์พร้อมกัน</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-slate-200">การบีบอัด Context</td>
+                <td class="p-3">นับจำนวน 50 ข้อความอย่างหยาบๆ</td>
+                <td class="p-3">นับ BPE Token จริงๆ, มี Vector Index, และรักษาคู่ Tool Call/Result ไม่ให้แตกออกจากกัน</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- TAB 4: CODE EXPLORER -->
+    <section id="tab-code" class="tab-content hidden">
+      <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800 mb-6">
+        <h2 class="!mt-0 text-xl font-bold text-white flex items-center justify-between">
+          <span>💻 เจาะลึกโค้ด TypeScript ฉบับจริง (5 ไฟล์ของ nano-pi)</span>
+          <span class="text-xs text-slate-400 font-normal">Source code extracted from Harness Live</span>
+        </h2>
+        <p class="text-xs md:text-sm text-slate-300 mt-1">
+          คลิกเลือกไฟล์ด้านล่างเพื่อศึกษาการเขียนโค้ด TypeScript ที่กระชับและออกแบบมาอย่างงดงาม ทุกไฟล์ถูกเก็บไว้ในโปรเจกต์นี้ที่โฟลเดอร์ <code>src/</code>
+        </p>
+
+        <!-- Code Subtabs -->
+        <div class="flex flex-wrap gap-2 mt-4 pt-4 border-t border-slate-800">
+          <button onclick="showSource('llm.ts')" id="btn-src-llm" class="src-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-emerald-500 text-white">llm.ts (~338 บรรทัด)</button>
+          <button onclick="showSource('agent.ts')" id="btn-src-agent" class="src-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300 hover:text-white">agent.ts (~218 บรรทัด)</button>
+          <button onclick="showSource('tools.ts')" id="btn-src-tools" class="src-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300 hover:text-white">tools.ts (~154 บรรทัด)</button>
+          <button onclick="showSource('tui.ts')" id="btn-src-tui" class="src-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300 hover:text-white">tui.ts (~91 บรรทัด)</button>
+          <button onclick="showSource('cli.ts')" id="btn-src-cli" class="src-btn px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-slate-800 text-slate-300 hover:text-white">cli.ts (~128 บรรทัด)</button>
+        </div>
+      </div>
+
+      <!-- Code Container -->
+      <div class="relative bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+        <div class="flex items-center justify-between px-4 py-2.5 bg-slate-900/90 border-b border-slate-800 text-xs text-slate-400 font-mono">
+          <span id="current-filename" class="text-emerald-400 font-bold">src/llm.ts</span>
+          <button onclick="copyCurrentCode()" class="hover:text-white flex items-center gap-1 bg-slate-800 px-2 py-1 rounded border border-slate-700">
+            <span>คัดลอกโค้ด</span>
+          </button>
+        </div>
+        <pre class="p-4 overflow-x-auto text-xs max-h-[650px]"><code id="code-display" class="language-typescript"></code></pre>
+      </div>
+    </section>
+
+    <!-- TAB 5: DEPLOY TO VERCEL -->
+    <section id="tab-deploy" class="tab-content hidden space-y-6">
+      <div class="bg-slate-900/80 p-6 md:p-8 rounded-2xl border border-slate-800">
+        <h2 class="!mt-0 text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+          <span>🚀 วิธีนำโปรเจกต์นี้ขึ้น Vercel (Deploy Guide)</span>
+        </h2>
+        <p class="text-slate-300 text-sm mt-2">
+          โปรเจกต์นี้ถูกสร้างและจัดเตรียมไว้อย่างสมบูรณ์แบบที่โฟลเดอร์ <code>/Volumes/Sample Data/0.Vibe Code All Project/Vscode Claudecode/Harness</code> พร้อมไฟล์ <code>package.json</code>, <code>vercel.json</code>, และโค้ด TypeScript ทั้งหมด สามารถนำขึ้น Vercel ได้ 2 วิธีง่ายๆ ดังนี้:
+        </p>
+      </div>
+
+      <!-- Option 1: Vercel CLI -->
+      <div class="bg-slate-900/80 p-6 rounded-2xl border border-emerald-500/30">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="badge bg-emerald-500/20 text-emerald-400">วิธีที่ 1 (แนะนำ รวดเร็วที่สุด)</span>
+          <h3 class="!mt-0 !mb-0 text-base font-bold text-white">Deploy ผ่าน Vercel CLI ใน Terminal</h3>
+        </div>
+        <p class="text-xs text-slate-300 mb-3">
+          เปิด Terminal บนเครื่อง Mac ของคุณ แล้วรันคำสั่ง 2 บรรทัดนี้:
+        </p>
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-xs text-emerald-400 space-y-2">
+          <div><span class="text-slate-500"># เข้าไปที่โฟลเดอร์โปรเจกต์</span></div>
+          <div>cd /Volumes/Sample Data/0.Vibe Code All Project/Vscode Claudecode/Harness</div>
+          <div class="mt-2"><span class="text-slate-500"># สั่ง deploy ขึ้น Vercel ทันที</span></div>
+          <div>vercel --prod</div>
+        </div>
+        <p class="text-xs text-slate-400 mt-3">
+          ระบบจะถามยืนยัน Scope <code>mrarrangers-projects</code> และชื่อโปรเจกต์ <code>harness</code> ให้กด Enter ยืนยัน เว็บไซต์จะออนไลน์พร้อม URL ภายใน 5 วินาที!
+        </p>
+      </div>
+
+      <!-- Option 2: GitHub Push -->
+      <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+        <div class="flex items-center gap-2 mb-3">
+          <span class="badge bg-blue-500/20 text-blue-400">วิธีที่ 2</span>
+          <h3 class="!mt-0 !mb-0 text-base font-bold text-white">ผ่าน GitHub ไปยัง Vercel Dashboard</h3>
+        </div>
+        <ol class="text-xs text-slate-300 space-y-2.5 list-decimal pl-4">
+          <li>
+            สร้าง Repository ใหม่บน GitHub ของคุณ (เช่น <code>mrarrangerteam/harness</code>)
+          </li>
+          <li>
+            รันคำสั่ง Git Push จากเครื่อง:
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-emerald-400 my-1.5">
+              cd /Volumes/Sample Data/0.Vibe Code All Project/Vscode Claudecode/Harness<br>
+              git init<br>
+              git add .<br>
+              git commit -m "Initial commit of Harness Live study guide"<br>
+              git remote add origin https://github.com/mrarrangerteam/harness.git<br>
+              git push -u origin main
+            </div>
+          </li>
+          <li>
+            เปิด <a href="https://vercel.com/mrarrangers-projects" target="_blank" class="text-blue-400 underline">https://vercel.com/mrarrangers-projects</a> กดปุ่ม <strong>"Add New... -> Project"</strong> แล้วเลือก Repository <code>harness</code> เพื่อ Deploy!
+          </li>
+        </ol>
+      </div>
+
+      <!-- Local Testing -->
+      <div class="bg-slate-900/80 p-6 rounded-2xl border border-slate-800">
+        <h3 class="!mt-0 text-base font-bold text-slate-200 mb-2">💻 หรือเปิดดูบนเครื่อง Mac ตอนนี้เลย</h3>
+        <p class="text-xs text-slate-300 mb-3">สามารถเปิดไฟล์ index.html ขึ้นมาดูใน Browser ได้ทันทีโดยไม่ต้องต่ออินเทอร์เน็ต:</p>
+        <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-xs text-emerald-400">
+          open /Volumes/Sample Data/0.Vibe Code All Project/Vscode Claudecode/Harness/index.html
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 bg-[#0B0F17] py-8 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4">
+      <p>Harness Live · Pi from Scratch Study Guide & Interactive Explorer</p>
+      <p class="mt-1">Adapted and translated for deep architectural learning by MRARRANGER Team</p>
+    </div>
+  </footer>
+
+  <!-- Script for Tab Switching and Source Code display -->
+  <script>
+    const sources = {"llm.ts": "// src/llm.ts\n// Unified LLM API \u00e2\u0080\u0094 parses OpenAI Completions SSE responses into four event types.\n// This teaching version supports only the OpenAI-compatible format (also supported by GLM, DeepSeek, Ollama, and others).\n\n// ===== Types =====\n\n/** Model configuration */\nexport type Model = {\n  apiKey: string;\n  model: string; // For example, \"gpt-4o\" or \"glm-5.2\"\n  baseUrl?: string; // Defaults to https://api.openai.com/v1\n  maxTokens?: number; // If unset, the API chooses the default (cli.ts sets it to 4096)\n};\n\n/**\n * Content block: a structured unit of message content.\n * Note: tool_result is placed in a ContentBlock inside a user message;\n * in pi it is a separate ToolResultMessage type, while nanopi simplifies this into one structure.\n */\nexport type ContentBlock =\n  | { type: \"text\"; text: string }\n  | { type: \"tool_use\"; id: string; name: string; input: unknown }\n  | { type: \"tool_result\"; tool_use_id: string; content: string };\n\n/** Message: user and assistant share the same structure */\nexport type Message = {\n  role: \"user\" | \"assistant\";\n  content: string | ContentBlock[];\n};\n\n/** Context: plain JSON that can be stringified and persisted */\nexport type Context = {\n  systemPrompt?: string;\n  messages: Message[];\n};\n\n/** Stream events: the llm module's unified external output */\nexport type StreamEvent =\n  | { type: \"text_delta\"; delta: string }\n  | { type: \"tool_call\"; id: string; name: string; args: unknown }\n  | {\n      type: \"done\";\n      stopReason: \"end_turn\" | \"tool_use\" | \"max_tokens\" | \"aborted\";\n    }\n  | { type: \"error\"; error: Error };\n\n/** Tool definition format passed in by the agent module */\nexport type ToolDef = {\n  name: string;\n  description: string;\n  parameters: object;\n};\n\n// ===== Helper functions =====\n\n/**\n * Convert nanopi Context into the OpenAI messages format.\n * This is a pure conversion function with no network logic.\n */\nexport function contextToOpenAIMessages(context: Context): object[] {\n  const messages: object[] = [];\n  if (context.systemPrompt)\n    messages.push({ role: \"system\", content: context.systemPrompt });\n\n  for (const msg of context.messages) {\n    if (typeof msg.content === \"string\") {\n      messages.push({ role: msg.role, content: msg.content });\n      continue;\n    }\n\n    const blocks = msg.content;\n    if (msg.role === \"assistant\") {\n      const toolCalls: object[] = [];\n      let text = \"\";\n      for (const b of blocks) {\n        if (b.type === \"text\") text += b.text;\n        else if (b.type === \"tool_use\") {\n          toolCalls.push({\n            id: b.id,\n            type: \"function\",\n            function: { name: b.name, arguments: JSON.stringify(b.input) },\n          });\n        }\n      }\n      // OpenAI requires an assistant message to have non-null content or tool_calls.\n      // For a tool_call-only message, content is null; if both are empty (such as a contentless turn after abort/error), use an empty string to avoid an API 400 response.\n      const content = text || (toolCalls.length ? null : \"\");\n      messages.push({\n        role: \"assistant\",\n        content,\n        tool_calls: toolCalls.length ? toolCalls : undefined,\n      });\n    } else {\n      // A tool_result block in a user message \u00e2\u0086\u0092 OpenAI requires a separate role:tool message\n      for (const b of blocks) {\n        if (b.type === \"tool_result\") {\n          messages.push({\n            role: \"tool\",\n            tool_call_id: b.tool_use_id,\n            content: b.content,\n          });\n        } else if (b.type === \"text\") {\n          messages.push({ role: \"user\", content: b.text });\n        }\n      }\n    }\n  }\n  return messages;\n}\n\n/** Minimal type for an OpenAI SSE chunk */\ntype OpenAIChunk = {\n  choices: Array<{\n    delta?: {\n      content?: string;\n      tool_calls?: Array<{\n        index?: number;\n        id?: string;\n        function?: { name?: string; arguments?: string };\n      }>;\n    };\n    finish_reason?: string;\n  }>;\n};\n\n/** Parse one SSE data line, accumulate tool_calls, and return text_delta and stop_reason */\nfunction handleSSELine(\n  data: string,\n  toolCallBuffers: Map<number, { id: string; name: string; argsBuf: string }>,\n): {\n  textDelta: string | null;\n  stopReason: \"end_turn\" | \"tool_use\" | \"max_tokens\" | null;\n} {\n  let chunk: OpenAIChunk;\n  try {\n    chunk = JSON.parse(data) as OpenAIChunk;\n  } catch {\n    return { textDelta: null, stopReason: null };\n  }\n\n  const choice = chunk.choices[0];\n  if (!choice) return { textDelta: null, stopReason: null };\n\n  let textDelta: string | null = null;\n  let stopReason: \"end_turn\" | \"tool_use\" | \"max_tokens\" | null = null;\n\n  if (choice.delta?.content) textDelta = choice.delta.content;\n\n  // tool_call delta: accumulate partial JSON for name + arguments by index\n  if (choice.delta?.tool_calls) {\n    for (const tc of choice.delta.tool_calls) {\n      const idx = tc.index ?? 0;\n      if (!toolCallBuffers.has(idx)) {\n        toolCallBuffers.set(idx, {\n          id: tc.id ?? `call_${idx}`,\n          name: \"\",\n          argsBuf: \"\",\n        });\n      }\n      const entry = toolCallBuffers.get(idx)!;\n      if (tc.id) entry.id = tc.id;\n      if (tc.function?.name) entry.name = tc.function.name;\n      if (tc.function?.arguments) entry.argsBuf += tc.function.arguments;\n    }\n  }\n\n  // finish_reason mapping: tool_calls \u00e2\u0086\u0092 tool_use, length \u00e2\u0086\u0092 max_tokens, stop \u00e2\u0086\u0092 end_turn (default)\n  if (choice.finish_reason === \"tool_calls\") stopReason = \"tool_use\";\n  else if (choice.finish_reason === \"length\") stopReason = \"max_tokens\";\n\n  return { textDelta, stopReason };\n}\n\n/** At stream end, emit accumulated tool_calls in order */\nfunction flushToolCalls(\n  toolCallBuffers: Map<number, { id: string; name: string; argsBuf: string }>,\n): { id: string; name: string; args: unknown }[] {\n  const calls: { id: string; name: string; args: unknown }[] = [];\n  for (const [, tc] of [...toolCallBuffers].sort((a, b) => a[0] - b[0])) {\n    let args: unknown = {};\n    if (tc.argsBuf) {\n      try {\n        args = JSON.parse(tc.argsBuf);\n      } catch {\n        args = {};\n      }\n    }\n    calls.push({ id: tc.id, name: tc.name, args });\n  }\n  return calls;\n}\n\n// ===== stream function =====\n\n/**\n * Call the OpenAI Completions API (streaming) and return a unified event stream.\n *\n * @param model    Model configuration\n * @param context  Conversation context\n * @param opts     Tools + abort signal\n */\nexport async function* stream(\n  model: Model,\n  context: Context,\n  opts: { tools?: ToolDef[]; signal?: AbortSignal } = {},\n): AsyncGenerator<StreamEvent> {\n  const url = `${model.baseUrl ?? \"https://api.openai.com/v1\"}/chat/completions`;\n  const messages = contextToOpenAIMessages(context);\n\n  const body: Record<string, unknown> = {\n    model: model.model,\n    stream: true,\n    messages,\n  };\n  if (model.maxTokens) body.max_tokens = model.maxTokens;\n  if (opts.tools?.length) {\n    body.tools = opts.tools.map((t) => ({\n      type: \"function\",\n      function: {\n        name: t.name,\n        description: t.description,\n        parameters: t.parameters,\n      },\n    }));\n  }\n\n  // Send the request\n  let response: Response;\n  try {\n    response = await fetch(url, {\n      method: \"POST\",\n      headers: {\n        \"content-type\": \"application/json\",\n        authorization: `Bearer ${model.apiKey}`,\n      },\n      body: JSON.stringify(body),\n      signal: opts.signal,\n    });\n  } catch (e) {\n    if (opts.signal?.aborted) {\n      yield { type: \"done\", stopReason: \"aborted\" };\n      return;\n    }\n    yield { type: \"error\", error: e as Error };\n    return;\n  }\n\n  if (!response.ok || !response.body) {\n    const text = await response.text().catch(() => \"unknown error\");\n    yield {\n      type: \"error\",\n      error: new Error(`API ${response.status}: ${text}`),\n    };\n    return;\n  }\n\n  // Parse SSE line by line\n  const reader = response.body.getReader();\n  const decoder = new TextDecoder();\n  let buf = \"\";\n  let stopReason: \"end_turn\" | \"tool_use\" | \"max_tokens\" = \"end_turn\";\n  const toolCallBuffers = new Map<\n    number,\n    { id: string; name: string; argsBuf: string }\n  >();\n\n  try {\n    while (true) {\n      const { done, value } = await reader.read();\n      if (done) break;\n      buf += decoder.decode(value, { stream: true });\n\n      let nl: number;\n      while ((nl = buf.indexOf(\"\\n\")) >= 0) {\n        const line = buf.slice(0, nl).trim();\n        buf = buf.slice(nl + 1);\n        if (!line.startsWith(\"data: \")) continue;\n        const data = line.slice(6);\n        if (data === \"[DONE]\") continue;\n\n        const result = handleSSELine(data, toolCallBuffers);\n        if (result.textDelta)\n          yield { type: \"text_delta\", delta: result.textDelta };\n        if (result.stopReason) stopReason = result.stopReason;\n      }\n    }\n  } catch (e) {\n    if (opts.signal?.aborted) {\n      yield { type: \"done\", stopReason: \"aborted\" };\n      return;\n    }\n    yield { type: \"error\", error: e as Error };\n    return;\n  }\n\n  // Emit accumulated tool_calls\n  for (const tc of flushToolCalls(toolCallBuffers)) {\n    yield { type: \"tool_call\", id: tc.id, name: tc.name, args: tc.args };\n  }\n  yield {\n    type: \"done\",\n    stopReason: opts.signal?.aborted ? \"aborted\" : stopReason,\n  };\n}\n\n// ===== Message construction helpers =====\n\n/** Accumulate events from one streamed turn into an assistant message */\nexport function buildAssistantMessage(\n  text: string,\n  toolCalls: { id: string; name: string; args: unknown }[],\n): Message {\n  const content: ContentBlock[] = [];\n  if (text) content.push({ type: \"text\", text });\n  for (const tc of toolCalls) {\n    content.push({\n      type: \"tool_use\",\n      id: tc.id,\n      name: tc.name,\n      input: tc.args,\n    });\n  }\n  return { role: \"assistant\", content };\n}\n\n/** Construct a tool_result user message */\nexport function buildToolResultMessage(\n  results: { tool_use_id: string; content: string }[],\n): Message {\n  return {\n    role: \"user\",\n    content: results.map((r) => ({\n      type: \"tool_result\" as const,\n      tool_use_id: r.tool_use_id,\n      content: r.content,\n    })),\n  };\n}\n", "agent.ts": "// src/agent.ts\n// Agent loop \u00e2\u0080\u0094 the heart of the entire project: one while loop.\n//\n// Stream the LLM response \u00e2\u0086\u0092 execute each tool_call \u00e2\u0086\u0092 return results to Context \u00e2\u0086\u0092 continue streaming\n// until the model stops calling tools (end_turn / max_tokens) or is interrupted (aborted / error).\n//\n// Import stream directly instead of using dependency injection so learners can immediately see the LLM interaction point.\n// pi uses StreamFn parameter injection to support interchangeable backends; this teaching version omits it.\n\nimport {\n  stream,\n  buildAssistantMessage,\n  buildToolResultMessage,\n  type Model,\n  type Context,\n} from \"./llm.js\";\n\n/** Tool definition: name + description + JSON Schema parameters + execute function */\nexport type AgentTool = {\n  name: string;\n  description: string;\n  parameters: object; // JSON Schema\n  execute: (args: unknown, signal?: AbortSignal) => Promise<string>;\n};\n\n/** Agent event stream exposed for the UI to consume */\nexport type AgentEvent =\n  | { type: \"assistant_text\"; delta: string }\n  | { type: \"tool_call\"; id: string; name: string; args: unknown }\n  | { type: \"tool_result\"; id: string; name: string; result: string }\n  | {\n      type: \"turn_end\";\n      stopReason: \"end_turn\" | \"max_tokens\" | \"aborted\" | \"error\";\n    };\n\n/** Compaction threshold: compact older messages when the count reaches this value */\nconst COMPACT_THRESHOLD = 50;\n/** Number of recent messages preserved during compaction */\nconst KEEP_RECENT = 20;\n\n/**\n * Conversation compaction: when there are too many messages, have the LLM summarize the older messages and replace them with the summary.\n * This demonstrates a core agent capability: context is limited and must be compacted when full.\n * pi's implementation spans 970 lines for token estimates, cut-point boundaries, split turns, and more; this teaching version uses a simple message-count approximation.\n */\nasync function compactContext(\n  model: Model,\n  context: Context,\n  signal?: AbortSignal,\n): Promise<void> {\n  if (signal?.aborted) return; // Do not compact on abort; an empty summary could corrupt context\n  if (context.messages.length < COMPACT_THRESHOLD) return;\n\n  const oldMessages = context.messages.slice(0, -KEEP_RECENT);\n  const recentMessages = context.messages.slice(-KEEP_RECENT);\n\n  // Serialize older messages as plain text for the LLM to summarize\n  const conversationText = oldMessages\n    .map(\n      (m) =>\n        `${m.role}: ${typeof m.content === \"string\" ? m.content : JSON.stringify(m.content)}`,\n    )\n    .join(\"\\n\");\n\n  // Collect a summary from the LLM stream without forwarding it to the UI\n  const summaryContext: Context = {\n    systemPrompt:\n      \"Summarize the following conversation into a concise context summary, preserving key decisions, completed work, and remaining tasks.\",\n    messages: [{ role: \"user\", content: conversationText }],\n  };\n\n  let summary = \"\";\n  let failed = false;\n  for await (const ev of stream(model, summaryContext, { signal })) {\n    if (ev.type === \"text_delta\") summary += ev.delta;\n    else if (\n      ev.type === \"error\" ||\n      (ev.type === \"done\" && ev.stopReason === \"aborted\")\n    ) {\n      failed = true;\n      break;\n    }\n  }\n\n  // Do not replace context if compaction fails; preserving the original messages is safer than an empty summary\n  if (failed || !summary) return;\n\n  // Replace older messages with the summary while preserving recent messages\n  context.messages = [\n    { role: \"user\", content: `[context summary]\\n${summary}` },\n    ...recentMessages,\n  ];\n}\n\n/**\n * Run the agent loop. There is no max_steps\u00e2\u0080\u0094the loop runs until the model says to stop. pi likewise has no hard-coded step limit, but adds a shouldStopAfterTurn callback; this teaching version omits it.\n *\n * @param model    Model configuration\n * @param context  Conversation context (mutated in place)\n * @param tools    Tool registry\n * @param signal   Abort signal\n */\nexport async function* runAgent(\n  model: Model,\n  context: Context,\n  tools: AgentTool[],\n  signal?: AbortSignal,\n): AsyncGenerator<AgentEvent> {\n  const toolMap = new Map(tools.map((t) => [t.name, t]));\n  const toolDefs = tools.map((t) => ({\n    name: t.name,\n    description: t.description,\n    parameters: t.parameters,\n  }));\n\n  while (true) {\n    // 0. Context compaction: compact older messages first when there are too many\n    await compactContext(model, context, signal);\n\n    // 1. Stream the LLM call and collect text and tool_calls\n    let text = \"\";\n    let stopReason: \"end_turn\" | \"tool_use\" | \"max_tokens\" | \"aborted\" =\n      \"end_turn\";\n    const toolCalls: { id: string; name: string; args: unknown }[] = [];\n\n    for await (const ev of stream(model, context, {\n      tools: toolDefs,\n      signal,\n    })) {\n      if (ev.type === \"text_delta\") {\n        text += ev.delta;\n        yield { type: \"assistant_text\", delta: ev.delta };\n      } else if (ev.type === \"tool_call\") {\n        toolCalls.push({ id: ev.id, name: ev.name, args: ev.args });\n        yield { type: \"tool_call\", id: ev.id, name: ev.name, args: ev.args };\n      } else if (ev.type === \"done\") {\n        stopReason = ev.stopReason;\n        if (ev.stopReason === \"aborted\") {\n          // Discard tool_calls on abort; without matching tool_result entries, the API would fail after session restoration\n          context.messages.push(buildAssistantMessage(text, []));\n          yield { type: \"turn_end\", stopReason: \"aborted\" };\n          return;\n        }\n      } else if (ev.type === \"error\") {\n        context.messages.push(buildAssistantMessage(text, []));\n        yield {\n          type: \"assistant_text\",\n          delta: `\\n[error] ${ev.error.message}`,\n        };\n        yield { type: \"turn_end\", stopReason: \"error\" };\n        return;\n      }\n    }\n\n    // 2. Add the assistant response to context\n    context.messages.push(buildAssistantMessage(text, toolCalls));\n\n    // 3. Handle truncation: tool args may be incomplete at max_tokens, so do not execute them; return an error to Context so the model can retry\n    if (stopReason === \"max_tokens\" && toolCalls.length > 0) {\n      const results = toolCalls.map((tc) => ({\n        tool_use_id: tc.id,\n        content: `error: output truncated by max_tokens, tool \"${tc.name}\" args may be incomplete.`,\n      }));\n      context.messages.push(buildToolResultMessage(results));\n      for (let i = 0; i < toolCalls.length; i++) {\n        yield {\n          type: \"tool_result\",\n          id: toolCalls[i].id,\n          name: toolCalls[i].name,\n          result: results[i].content,\n        };\n      }\n      continue;\n    }\n\n    // 4. No tool_call \u00e2\u0086\u0092 exit the loop\n    // A malformed API response may report tool_use without a tool_call delta; treat it as a normal end\n    const reason = stopReason === \"tool_use\" ? \"end_turn\" : stopReason;\n    if (toolCalls.length === 0) {\n      yield { type: \"turn_end\", stopReason: reason };\n      return;\n    }\n\n    // 5. Execute tool_calls serially (pi supports sequential and parallel modes; this teaching version always uses serial execution)\n    // Pass args directly to execute without validating against parameters (simplified for teaching; production code should validate first)\n    const results: { tool_use_id: string; content: string }[] = [];\n    for (const tc of toolCalls) {\n      const tool = toolMap.get(tc.name);\n      let result: string;\n      if (!tool) {\n        result = `error: tool \"${tc.name}\" not found`;\n      } else {\n        try {\n          result = await tool.execute(tc.args, signal);\n        } catch (e) {\n          result = `error: ${(e as Error).message}`;\n        }\n      }\n      results.push({ tool_use_id: tc.id, content: result });\n      yield { type: \"tool_result\", id: tc.id, name: tc.name, result };\n      if (signal?.aborted) break;\n    }\n\n    // 6. Add error results for tool_calls skipped due to abort (the API requires one tool_result for every tool_call)\n    for (const tc of toolCalls.slice(results.length)) {\n      results.push({ tool_use_id: tc.id, content: \"error: aborted\" });\n      yield {\n        type: \"tool_result\",\n        id: tc.id,\n        name: tc.name,\n        result: \"error: aborted\",\n      };\n    }\n\n    // 7. Return tool_result to Context and begin the next turn\n    context.messages.push(buildToolResultMessage(results));\n  }\n}\n", "tools.ts": "// src/tools.ts\n// Four built-in tools\u00e2\u0080\u0094the minimum set needed to read, write, and edit code and run verification.\n// Each tool is an async function returning a string; it has side effects but does not access agent state.\n// Note: this teaching version does not validate args; a production agent should validate parameters before execute.\n\nimport { promises as fs } from \"node:fs\";\nimport { exec } from \"node:child_process\";\nimport { promisify } from \"node:util\";\nimport * as path from \"node:path\";\nimport * as os from \"node:os\";\nimport type { AgentTool } from \"./agent.js\";\n\nconst execAsync = promisify(exec);\n\n/** Tool-output truncation limit in lines; longer output is reduced to its tail with a notice */\nconst MAX_OUTPUT_LINES = 200;\n\nlet truncateCounter = 0;\n\n/**\n * Truncate tool output: when it exceeds maxLines, keep only the tail and store the complete output in a temporary file.\n * Prefer the tail because errors usually appear at the end.\n */\nasync function truncateOutput(\n  content: string,\n  maxLines = MAX_OUTPUT_LINES,\n): Promise<string> {\n  const lines = content.split(\"\\n\");\n  if (lines.length <= maxLines) return content;\n  const kept = lines.slice(-maxLines).join(\"\\n\");\n  const tmpPath = path.join(\n    os.tmpdir(),\n    `nanopi-output-${process.pid}-${truncateCounter++}.txt`,\n  );\n  await fs.writeFile(tmpPath, content, \"utf-8\");\n  return `[output truncated: showing last ${maxLines} of ${lines.length} lines. full output: ${tmpPath}]\\n${kept}`;\n}\n\n/** read_file: return file contents (keep only the tail of oversized output) */\nconst readFile: AgentTool = {\n  name: \"read_file\",\n  description: \"Read file contents. Parameter: path (file path). Large files are truncated to the last 200 lines.\",\n  parameters: {\n    type: \"object\",\n    properties: {\n      path: { type: \"string\", description: \"Path of the file to read\" },\n    },\n    required: [\"path\"],\n  },\n  execute: async (args) => {\n    const { path: filePath } = args as { path: string };\n    const content = await fs.readFile(filePath, \"utf-8\");\n    return await truncateOutput(content);\n  },\n};\n\n/** write_file: overwrite a file */\nconst writeFile: AgentTool = {\n  name: \"write_file\",\n  description: \"Write a file (overwrite). Parameters: path (file path), content (file contents)\",\n  parameters: {\n    type: \"object\",\n    properties: {\n      path: { type: \"string\", description: \"Path of the file to write\" },\n      content: { type: \"string\", description: \"File contents\" },\n    },\n    required: [\"path\", \"content\"],\n  },\n  execute: async (args) => {\n    const { path: filePath, content } = args as {\n      path: string;\n      content: string;\n    };\n    await fs.mkdir(path.dirname(filePath) || \".\", { recursive: true });\n    await fs.writeFile(filePath, content, \"utf-8\");\n    return `wrote ${filePath} (${content.length} chars)`;\n  },\n};\n\n/** edit: replace an exact substring (exact matching with uniqueness validation) */\nconst edit: AgentTool = {\n  name: \"edit\",\n  description:\n    \"Edit a file by replacing an exact substring. Parameters: path, old_string, new_string. old_string must match exactly once, or the operation fails.\",\n  parameters: {\n    type: \"object\",\n    properties: {\n      path: { type: \"string\", description: \"File path\" },\n      old_string: {\n        type: \"string\",\n        description: \"Text to replace (must match exactly once)\",\n      },\n      new_string: { type: \"string\", description: \"Replacement text\" },\n    },\n    required: [\"path\", \"old_string\", \"new_string\"],\n  },\n  execute: async (args) => {\n    const {\n      path: filePath,\n      old_string,\n      new_string,\n    } = args as { path: string; old_string: string; new_string: string };\n    const content = await fs.readFile(filePath, \"utf-8\");\n    const count = content.split(old_string).length - 1;\n    if (count === 0) throw new Error(`old_string not found in ${filePath}`);\n    if (count > 1)\n      throw new Error(\n        `old_string matches ${count} places in ${filePath}, must be unique`,\n      );\n    // Use a replacement function so String.replace does not interpret special $ tokens in new_string ($& $` $' $1)\n    const newContent = content.replace(old_string, () => new_string);\n    await fs.writeFile(filePath, newContent, \"utf-8\");\n    return `edited ${filePath}: replaced ${old_string.length} chars`;\n  },\n};\n\n/** run_bash: execute a shell command (keep only the tail of oversized output) */\nconst runBash: AgentTool = {\n  name: \"run_bash\",\n  description:\n    \"Execute a shell command. Parameter: command (command string). Returns stdout+stderr, truncated to the last 200 lines.\",\n  parameters: {\n    type: \"object\",\n    properties: {\n      command: { type: \"string\", description: \"Shell command to execute\" },\n    },\n    required: [\"command\"],\n  },\n  execute: async (args, signal) => {\n    const { command } = args as { command: string };\n    try {\n      const { stdout, stderr } = await execAsync(command, {\n        maxBuffer: 1024 * 1024,\n        timeout: 30000,\n        signal,\n      });\n      const output = stderr ? `[stderr] ${stderr}\\n[stdout] ${stdout}` : stdout;\n      return await truncateOutput(output);\n    } catch (e: unknown) {\n      if (signal?.aborted) return \"aborted\";\n      const err = e as NodeJS.ErrnoException & {\n        code?: number;\n        stdout?: string;\n        stderr?: string;\n      };\n      return `[exit ${err.code}] ${err.stderr ?? \"\"}${err.stdout ?? \"\"}`;\n    }\n  },\n};\n\n/** Return all built-in tools */\nexport function builtinTools(): AgentTool[] {\n  return [readFile, writeFile, edit, runBash];\n}\n", "tui.ts": "// src/tui.ts\n// Minimal terminal interface \u00e2\u0080\u0094 single-line input + streaming output + Ctrl+C interruption.\n// It has no differential renderer, component tree, or Markdown rendering.\n// Those belong to a terminal UI framework; they are not the essence of building an agent from scratch.\n\nimport * as readline from \"readline\";\n\nexport class Tui {\n  private rl: readline.Interface | null = null;\n  private onPromptCb: ((text: string) => void) | null = null;\n  private onAbortCb: (() => void) | null = null;\n  private aborted = false;\n  private busy = false; // true while the agent is running, preventing concurrent input\n\n  /** Register the prompt callback */\n  onPrompt(cb: (text: string) => void): void {\n    this.onPromptCb = cb;\n  }\n\n  /** Register the Ctrl+C callback */\n  onAbort(cb: () => void): void {\n    this.onAbortCb = cb;\n  }\n\n  /** Start the TUI and begin reading input */\n  start(): void {\n    this.rl = readline.createInterface({\n      input: process.stdin,\n      output: process.stdout,\n    });\n    process.stdin.on(\n      \"keypress\",\n      (_ch: string, key: { ctrl?: boolean; name?: string } | undefined) => {\n        // Handle Ctrl+C only while the agent is running; when idle, leave it to readline's default behavior\n        if (this.busy && key?.ctrl && key?.name === \"c\" && !this.aborted) {\n          this.aborted = true;\n          this.onAbortCb?.();\n        }\n      },\n    );\n\n    this.prompt();\n  }\n  private prompt(): void {\n    if (!this.rl) return;\n    if (this.busy) return; // Do not show a prompt while the agent is running\n    this.aborted = false;\n    this.rl.question(\"> \", (answer) => {\n      const text = answer.trim();\n      if (text) {\n        this.onPromptCb?.(text);\n        // Do not call prompt() recursively yet; wait for setBusy(false)\n      } else {\n        this.prompt(); // Empty input: prompt again without invoking the callback\n      }\n    });\n  }\n\n  /** Called when the agent starts running to prevent new input */\n  setBusy(busy: boolean): void {\n    this.busy = busy;\n    if (!busy) this.prompt(); // Restore input when the agent finishes\n  }\n\n  /** Print a streamed assistant text delta */\n  printText(delta: string): void {\n    process.stdout.write(delta);\n  }\n\n  /** Print a tool call */\n  printToolCall(name: string, args: unknown): void {\n    process.stdout.write(`\\n[tool: ${name}] ${JSON.stringify(args)}\\n`);\n  }\n\n  /** Print a tool result */\n  printToolResult(name: string, result: string): void {\n    process.stdout.write(`[result: ${name}] ${result}\\n`);\n  }\n\n  /** End the turn with a newline */\n  printTurnEnd(): void {\n    process.stdout.write(\"\\n\");\n  }\n\n  /** Stop the TUI and remove listeners */\n  stop(): void {\n    this.rl?.close();\n    this.rl = null;\n    process.stdin.removeAllListeners(\"keypress\");\n  }\n}\n", "cli.ts": "// src/cli.ts\n// Wiring layer \u00e2\u0080\u0094 connects llm / agent / tui / tools and serves as the sole entry point.\n// Session persistence: append context.messages to ~/.nanopi/session.jsonl after each turn.\n\nimport { promises as fs } from \"node:fs\";\nimport * as path from \"node:path\";\nimport * as os from \"node:os\";\nimport { runAgent } from \"./agent.js\";\nimport { Tui } from \"./tui.js\";\nimport { builtinTools } from \"./tools.js\";\nimport type { Model, Context, Message } from \"./llm.js\";\n\nconst SESSION_DIR = path.join(os.homedir(), \".nanopi\");\nconst SESSION_FILE = path.join(SESSION_DIR, \"session.jsonl\");\n\n/** Fixed system prompt */\nconst SYSTEM_PROMPT =\n  \"You are a coding assistant. Use the provided tools to read and write files and execute commands to complete tasks. Read before making changes, and run commands afterward to verify them.\";\n\n// Track the number of persisted messages and append only new ones.\n// This is CLI process-level state (not agent state\u00e2\u0080\u0094the agent itself is stateless; context is the state).\nlet persistedCount = 0;\n\nasync function main() {\n  const apiKey = process.env.NANOPI_API_KEY;\n  if (!apiKey) {\n    console.error(\"Set the NANOPI_API_KEY environment variable\");\n    process.exit(1);\n  }\n\n  const model: Model = {\n    apiKey,\n    model: process.env.NANOPI_MODEL ?? \"glm-5.2\",\n    baseUrl: process.env.NANOPI_BASE_URL ?? \"https://api.openai.com/v1\",\n    maxTokens: 4096,\n  };\n\n  // Initialize context: use the dedicated system prompt field and load messages from the session file\n  const context: Context = {\n    systemPrompt: SYSTEM_PROMPT,\n    messages: await loadSession(),\n  };\n\n  const tools = builtinTools();\n  const tui = new Tui();\n\n  // Each turn: user input \u00e2\u0086\u0092 runAgent \u00e2\u0086\u0092 forward events to the TUI \u00e2\u0086\u0092 persist\n  tui.onPrompt(async (text) => {\n    try {\n      context.messages.push({ role: \"user\", content: text });\n\n      tui.setBusy(true);\n      const ctrl = new AbortController();\n      tui.onAbort(() => ctrl.abort()); // Create a new AbortController each turn and re-register the callback to point to it\n\n      for await (const ev of runAgent(model, context, tools, ctrl.signal)) {\n        switch (ev.type) {\n          case \"assistant_text\":\n            tui.printText(ev.delta);\n            break;\n          case \"tool_call\":\n            tui.printToolCall(ev.name, ev.args);\n            break;\n          case \"tool_result\":\n            tui.printToolResult(ev.name, ev.result);\n            break;\n          case \"turn_end\":\n            if (ev.stopReason === \"max_tokens\")\n              tui.printText(\"\\n[output truncated by max_tokens]\");\n            if (ev.stopReason === \"error\") tui.printText(\"\\n[error occurred]\");\n            tui.printTurnEnd();\n            break;\n        }\n      }\n\n      await persistSession(context.messages);\n    } catch (e) {\n      console.error(`\\n[error] ${(e as Error).message}`);\n    } finally {\n      tui.setBusy(false);\n    }\n  });\n\n  tui.start();\n}\n\n/** Load message history at startup to restore the previous conversation (exported for tests) */\nexport async function loadSession(\n  file: string = SESSION_FILE,\n): Promise<Message[]> {\n  try {\n    const data = await fs.readFile(file, \"utf-8\");\n    const lines = data.trim().split(\"\\n\").filter(Boolean);\n    // Recover line by line: skip corrupt lines instead of discarding all history (a crash may leave a partial JSON line)\n    const messages = lines.flatMap((line) => {\n      try {\n        return [JSON.parse(line) as Message];\n      } catch {\n        return [];\n      }\n    });\n    persistedCount = messages.length; // Do not rewrite messages that were already loaded\n    return messages;\n  } catch {\n    return []; // File does not exist; start empty\n  }\n}\n\n/** Persist messages to the session file (exported for tests) */\nexport async function persistSession(\n  messages: Message[],\n  file: string = SESSION_FILE,\n): Promise<void> {\n  await fs.mkdir(path.dirname(file) || \".\", { recursive: true });\n  const newMessages = messages.slice(persistedCount);\n  for (const msg of newMessages) {\n    await fs.appendFile(file, JSON.stringify(msg) + \"\\n\", \"utf-8\");\n  }\n  persistedCount = messages.length;\n}\n\n// Start only when run directly (not when imported)\nif (import.meta.url === `file://${process.argv[1]}`) {\n  main().catch((e) => {\n    console.error(e);\n    process.exit(1);\n  });\n}\n"};
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById(tabId).classList.remove('hidden');
+
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-500', 'text-white', 'shadow');
+        btn.classList.add('text-slate-400');
+      });
+
+      const activeBtn = document.getElementById('btn-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-slate-400');
+        activeBtn.classList.add('bg-emerald-500', 'text-white', 'shadow');
+      }
+
+      if (tabId === 'tab-code' && !document.getElementById('code-display').textContent) {
+        showSource('llm.ts');
+      }
+    }
+
+    function showSource(fname) {
+      document.querySelectorAll('.src-btn').forEach(b => {
+        b.classList.remove('bg-emerald-500', 'text-white');
+        b.classList.add('bg-slate-800', 'text-slate-300');
+      });
+      const b = document.getElementById('btn-src-' + fname.replace('.ts', ''));
+      if (b) {
+        b.classList.remove('bg-slate-800', 'text-slate-300');
+        b.classList.add('bg-emerald-500', 'text-white');
+      }
+
+      document.getElementById('current-filename').textContent = 'src/' + fname;
+      const codeEl = document.getElementById('code-display');
+      codeEl.textContent = sources[fname] || '// File content not loaded';
+      Prism.highlightElement(codeEl);
+    }
+
+    function copyCurrentCode() {
+      const code = document.getElementById('code-display').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        alert('คัดลอกโค้ดลง Clipboard เรียบร้อยแล้ว');
+      });
+    }
+
+    // Auto-load first source
+    showSource('llm.ts');
+  </script>
+</body>
+</html>

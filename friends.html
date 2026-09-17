@@ -1,0 +1,2242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>:root{color-scheme:light dark}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Harness and His Friends · คู่มือสถาปัตยกรรม Agent Runtime (ไทย-อังกฤษ)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,600&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* ─────────────────────────────────────────────────────────────
+   Harness and His Friends — presentation deck
+   Palette derived from Anthropic's production tokens.
+   ───────────────────────────────────────────────────────────── */
+
+:root{
+  /* surfaces */
+  --ground:#F0EEE6;
+  --surface:#FAF9F5;
+  --surface-2:#E8E6DC;
+  --warm:#E3DACC;
+  --manilla:#F5E3C7;
+  /* ink */
+  --ink:#141413;
+  --body:#3D3D3A;
+  --muted:#87867F;
+  --faint:#B0AEA5;
+  --rule:#CCCBC8;
+  /* accents */
+  --clay:#D97757;
+  --clay-deep:#C6613F;
+  --clay-wash:rgba(217,119,87,.10);
+  --blue:#5C86B6;
+  --blue-wash:rgba(92,134,182,.12);
+  --olive:#6B7F50;
+  --olive-wash:rgba(107,127,80,.12);
+  --shadow:rgba(20,20,19,.07);
+
+  --font-display:"Newsreader","Source Serif 4",Georgia,serif;
+  --font-serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --font-sans:"Figtree","Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+
+  --pad:clamp(20px,4.2vw,72px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#141413; --surface:#1D1D1B; --surface-2:#262623; --warm:#2E2A24; --manilla:#33291C;
+    --ink:#F5F3EC; --body:#D6D3C8; --muted:#9B998F; --faint:#6E6C64; --rule:#3A3A36;
+    --clay:#E08A6B; --clay-deep:#F0A88C; --clay-wash:rgba(224,138,107,.14);
+    --blue:#86AEDA; --blue-wash:rgba(134,174,218,.16);
+    --olive:#9CB37C; --olive-wash:rgba(156,179,124,.16);
+    --shadow:rgba(0,0,0,.42);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#141413; --surface:#1D1D1B; --surface-2:#262623; --warm:#2E2A24; --manilla:#33291C;
+  --ink:#F5F3EC; --body:#D6D3C8; --muted:#9B998F; --faint:#6E6C64; --rule:#3A3A36;
+  --clay:#E08A6B; --clay-deep:#F0A88C; --clay-wash:rgba(224,138,107,.14);
+  --blue:#86AEDA; --blue-wash:rgba(134,174,218,.16);
+  --olive:#9CB37C; --olive-wash:rgba(156,179,124,.16);
+  --shadow:rgba(0,0,0,.42);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--ground); color:var(--body);
+  font-family:var(--font-serif); font-size:16px;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+:focus-visible{outline:2px solid var(--clay); outline-offset:3px; border-radius:3px;}
+
+/* ── stage ─────────────────────────────────────────────── */
+#stage{position:fixed; inset:0; display:flex; flex-direction:column;}
+#slides{position:relative; flex:1; min-height:0;}
+.slide{
+  position:absolute; inset:0; overflow-y:auto; overflow-x:hidden;
+  padding:clamp(48px,6vh,64px) var(--pad) clamp(56px,7vh,72px);
+  opacity:0; visibility:hidden; pointer-events:none;
+  transform:translateY(10px);
+  transition:opacity .28s ease, transform .28s ease, visibility .28s;
+}
+.slide.on{opacity:1; visibility:visible; pointer-events:auto; transform:none;}
+.wrap{max-width:1220px; margin:0 auto; width:100%;}
+
+/* ── rails ─────────────────────────────────────────────── */
+#toprail{
+  position:relative; z-index:5; flex:0 0 auto;
+  display:flex; align-items:center; gap:14px;
+  padding:10px var(--pad) 0;
+  font-family:var(--font-mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted);
+}
+#toprail .sec{color:var(--ink); font-weight:500;}
+#toprail .dot{color:var(--faint);}
+#bar{flex:1; height:2px; background:var(--rule); border-radius:2px; overflow:hidden;}
+#bar>i{display:block; height:100%; width:0; background:var(--clay); transition:width .28s ease;}
+#botrail{
+  position:relative; z-index:5; flex:0 0 auto;
+  display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+  padding:0 var(--pad) 12px;
+  font-family:var(--font-mono); font-size:10.5px; letter-spacing:.08em;
+  color:var(--faint);
+}
+#botrail .spacer{flex:1;}
+#count{color:var(--ink); font-weight:500; font-variant-numeric:tabular-nums;}
+.rbtn{
+  font:inherit; letter-spacing:.08em; text-transform:uppercase;
+  background:none; border:1px solid var(--rule); color:var(--muted);
+  border-radius:5px; padding:4px 9px; cursor:pointer;
+}
+.rbtn:hover{border-color:var(--clay); color:var(--clay);}
+#hint{display:none;}
+@media (min-width:860px){#hint{display:inline;}}
+
+
+/* ── typography ────────────────────────────────────────── */
+.eyebrow{
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--clay); margin:0 0 14px;
+}
+.eyebrow .n{color:var(--faint);}
+h1{
+  font-family:var(--font-display); font-weight:400; letter-spacing:-.025em; line-height:1.02;
+  font-size:clamp(38px,6.4vw,78px); color:var(--ink); margin:0 0 18px; text-wrap:balance;
+}
+h2{
+  font-family:var(--font-display); font-weight:400; letter-spacing:-.02em; line-height:1.08;
+  font-size:clamp(28px,4vw,50px); color:var(--ink); margin:0 0 16px; text-wrap:balance;
+}
+h3{
+  font-family:var(--font-sans); font-weight:600; font-size:clamp(15px,1.5vw,18px);
+  color:var(--ink); margin:0 0 8px; letter-spacing:-.01em;
+}
+p{margin:0 0 14px; line-height:1.5; font-size:clamp(15px,1.55vw,19px); max-width:68ch;}
+.lede{font-size:clamp(17px,2vw,24px); line-height:1.42; color:var(--body); max-width:44ch;}
+.small{font-size:clamp(13px,1.25vw,15px); line-height:1.45;}
+strong{color:var(--ink); font-weight:600;}
+em.hl{font-style:normal; color:var(--clay); font-weight:600;}
+code,kbd{font-family:var(--font-mono); font-size:.88em;}
+code{background:var(--surface-2); padding:1px 5px; border-radius:4px; color:var(--ink);}
+kbd{
+  background:var(--surface); border:1px solid var(--rule); border-bottom-width:2px;
+  border-radius:4px; padding:1px 5px; font-size:.8em; color:var(--ink);
+}
+a{color:var(--clay); text-decoration:none; border-bottom:1px solid var(--clay-wash);}
+a:hover{border-bottom-color:var(--clay);}
+.src{
+  font-family:var(--font-mono); font-size:10.5px; color:var(--faint);
+  letter-spacing:.03em; margin-top:14px; line-height:1.6; max-width:none;
+}
+.term pre{max-height:min(62vh,660px); overflow:auto;}
+.term.sm pre{font-size:clamp(9px,.92vw,11.5px); line-height:1.52; padding:12px 16px;}
+.slide[data-title="Title"] .wrap{min-height:100%;}
+.lev .card{padding:11px 16px;}
+.wrap{transform-origin:top center; will-change:transform;}
+
+/* ── flip-card zoo ─────────────────────────────────────── */
+#zoo{display:grid; grid-template-columns:repeat(auto-fill,minmax(164px,1fr)); gap:9px;}
+.flip{
+  all:unset; box-sizing:border-box; display:block; cursor:pointer;
+  height:clamp(72px,10.5vh,96px); perspective:800px; border-radius:10px;
+}
+.flip:focus-visible{outline:2px solid var(--clay); outline-offset:3px;}
+.fin{
+  display:block; position:relative; width:100%; height:100%;
+  transform-style:preserve-3d; transition:transform .5s cubic-bezier(.3,.8,.35,1);
+}
+.flip.up .fin{transform:rotateY(180deg);}
+.fback,.ffront{
+  position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  border-radius:10px; border:1px solid var(--rule); padding:9px 12px;
+  display:flex; flex-direction:column; justify-content:center; gap:3px; overflow:hidden;
+}
+.fback{
+  background-color:var(--surface-2);
+  background-image:repeating-linear-gradient(135deg,transparent 0 6px,var(--clay-wash) 6px 7px);
+  border-color:var(--rule);
+}
+.flip:hover .fback{border-color:var(--clay);}
+.ffront{background:var(--surface); transform:rotateY(180deg);}
+.fname{
+  font-family:var(--font-sans); font-weight:600; color:var(--ink);
+  font-size:clamp(12.5px,1.12vw,15px); line-height:1.2;
+}
+.fname .tag{font-size:8px; padding:1px 4px; vertical-align:1px;}
+.fdesc{font-size:clamp(10.5px,.95vw,12px); line-height:1.32; color:var(--body);}
+.flip.up .ffront{border-color:var(--clay);}
+
+
+/* ── layout helpers ────────────────────────────────────── */
+.cols{display:grid; gap:clamp(20px,2.6vw,40px);}
+.c2{grid-template-columns:repeat(2,1fr);}
+.c3{grid-template-columns:repeat(3,1fr);}
+.c4{grid-template-columns:repeat(4,1fr);}
+.split{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr); align-items:center;}
+@media (max-width:880px){.c2,.c3,.c4,.split{grid-template-columns:1fr;}}
+.stack{display:flex; flex-direction:column; gap:14px;}
+.row{display:flex; gap:12px; flex-wrap:wrap; align-items:center;}
+
+/* ── cards ─────────────────────────────────────────────── */
+.card{
+  background:var(--surface); border:1px solid var(--rule); border-radius:10px;
+  padding:clamp(16px,1.8vw,24px);
+}
+.card.flat{background:transparent; border:none; padding:0;}
+.card .num{
+  font-family:var(--font-mono); font-size:11px; color:var(--clay); letter-spacing:.1em;
+  display:block; margin-bottom:8px;
+}
+.card p{font-size:clamp(13.5px,1.32vw,16px); margin-bottom:0; line-height:1.48;}
+.lift{border-left:3px solid var(--clay); padding-left:18px;}
+
+.stat{display:flex; flex-direction:column; gap:2px;}
+.stat .v{
+  font-family:var(--font-display); font-weight:400; font-size:clamp(34px,4.6vw,58px);
+  line-height:1; color:var(--ink); letter-spacing:-.03em; font-variant-numeric:tabular-nums;
+}
+.stat .v.acc{color:var(--clay);}
+.stat .k{
+  font-family:var(--font-mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted);
+}
+
+.tag{
+  display:inline-block; font-family:var(--font-mono); font-size:10px; letter-spacing:.09em;
+  text-transform:uppercase; padding:3px 8px; border-radius:4px;
+  background:var(--surface-2); color:var(--muted); border:1px solid var(--rule);
+}
+.tag.clay{background:var(--clay-wash); color:var(--clay-deep); border-color:transparent;}
+.tag.blue{background:var(--blue-wash); color:var(--blue); border-color:transparent;}
+.tag.olive{background:var(--olive-wash); color:var(--olive); border-color:transparent;}
+
+.note{
+  background:var(--manilla); border-radius:8px; padding:14px 18px;
+  font-size:clamp(13px,1.3vw,15.5px); line-height:1.5; color:var(--ink);
+}
+.note b{font-family:var(--font-sans); font-weight:700; font-size:.92em; letter-spacing:.01em;}
+
+/* ── tables ────────────────────────────────────────────── */
+.tw{overflow-x:auto; border:1px solid var(--rule); border-radius:10px; background:var(--surface);}
+table{border-collapse:collapse; width:100%; min-width:660px;}
+th,td{
+  text-align:left; padding:9px 14px; border-bottom:1px solid var(--rule);
+  font-size:clamp(12px,1.2vw,14.5px); line-height:1.38; vertical-align:top;
+}
+th{
+  font-family:var(--font-mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); font-weight:500; white-space:nowrap;
+}
+tbody tr:last-child td{border-bottom:none;}
+td.name{font-family:var(--font-sans); font-weight:600; color:var(--ink); white-space:nowrap;}
+td.num{font-family:var(--font-mono); font-variant-numeric:tabular-nums; white-space:nowrap;}
+
+/* ── terminal chrome ───────────────────────────────────── */
+.term{
+  background:#141413; border-radius:10px; overflow:hidden; border:1px solid #2A2A27;
+  box-shadow:0 8px 28px var(--shadow); font-family:var(--font-mono);
+}
+.term .bar{
+  display:flex; align-items:center; gap:6px; padding:8px 12px; background:#1D1D1B;
+  border-bottom:1px solid #2A2A27;
+}
+.term .bar i{width:9px; height:9px; border-radius:50%; background:#3A3A36; display:block;}
+.term .bar i:first-child{background:#D97757;}
+.term .bar span{
+  margin-left:8px; font-size:10.5px; color:#87867F; letter-spacing:.06em;
+}
+.term pre{
+  margin:0; padding:16px 18px; color:#D6D3C8; font-size:clamp(11px,1.12vw,13.5px);
+  line-height:1.68; overflow-x:auto; white-space:pre;
+}
+.term .cm{color:#87867F;}
+.term .kw{color:#D97757;}
+.term .st{color:#9CB37C;}
+.term .fn{color:#86AEDA;}
+.term .ok{color:#9CB37C;}
+.term .an{color:#E0B080;}
+.gutter{counter-reset:ln;}
+
+/* ── interactive bits ──────────────────────────────────── */
+.chip{
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+  padding:6px 12px; border-radius:999px; border:1px solid var(--rule);
+  background:var(--surface); color:var(--muted); cursor:pointer; transition:.15s;
+}
+.chip:hover{color:var(--ink); border-color:var(--faint);}
+.chip[aria-pressed="true"]{background:var(--ink); color:var(--ground); border-color:var(--ink);}
+
+.barchart{display:flex; flex-direction:column; gap:clamp(12px,1.6vh,20px);}
+.bgroup{display:grid; grid-template-columns:minmax(140px,24%) 1fr; gap:14px; align-items:center;}
+@media (max-width:700px){.bgroup{grid-template-columns:1fr; gap:6px;}}
+.bgroup .lab{font-size:clamp(12px,1.2vw,14.5px); line-height:1.3; color:var(--ink); font-family:var(--font-sans); font-weight:600;}
+.bgroup .lab small{display:block; font-family:var(--font-mono); font-size:10px; color:var(--muted); font-weight:400; letter-spacing:.05em; margin-top:2px;}
+.bars{display:flex; flex-direction:column; gap:5px;}
+.brow{display:grid; grid-template-columns:1fr auto; gap:10px; align-items:center;}
+.btrack{height:22px; background:var(--surface-2); border-radius:4px; overflow:hidden;}
+.btrack>i{
+  display:block; height:100%; width:0; border-radius:4px;
+  background:var(--faint); transition:width .7s cubic-bezier(.2,.7,.3,1);
+  display:flex; align-items:center;
+}
+.brow.hi .btrack>i{background:var(--clay);}
+.brow .bl{
+  font-family:var(--font-mono); font-size:10.5px; color:var(--muted); letter-spacing:.05em;
+  white-space:nowrap;
+}
+.brow .bv{font-family:var(--font-mono); font-size:12px; color:var(--ink); font-variant-numeric:tabular-nums; min-width:52px; text-align:right;}
+.bcap{font-family:var(--font-mono); font-size:10.5px; color:var(--clay); letter-spacing:.06em; white-space:nowrap;}
+
+/* overview map */
+#overview{
+  position:fixed; inset:0; z-index:40; background:var(--ground);
+  padding:clamp(24px,4vw,56px) var(--pad); overflow-y:auto; display:none;
+}
+#overview.on{display:block;}
+.ovgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:10px; margin-bottom:26px;}
+.ovcard{
+  text-align:left; background:var(--surface); border:1px solid var(--rule); border-radius:8px;
+  padding:11px 13px; cursor:pointer; font-family:var(--font-sans); color:var(--body);
+  display:flex; flex-direction:column; gap:5px; transition:.14s;
+}
+.ovcard:hover{border-color:var(--clay); transform:translateY(-2px);}
+.ovcard.cur{background:var(--ink); border-color:var(--ink);}
+.ovcard.cur .t{color:var(--ground);} .ovcard.cur .n{color:var(--clay);}
+.ovcard .n{font-family:var(--font-mono); font-size:10px; color:var(--faint); letter-spacing:.08em;}
+.ovcard .t{font-size:13.5px; font-weight:600; color:var(--ink); line-height:1.28;}
+.ovsec{
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--clay); margin:0 0 12px; padding-top:6px; border-top:1px solid var(--rule);
+}
+
+figure{margin:0;}
+figcaption{
+  font-family:var(--font-mono); font-size:10.5px; color:var(--muted); letter-spacing:.04em;
+  margin-top:10px; line-height:1.55;
+}
+svg.dia{width:100%; height:auto; max-width:100%; display:block; color:var(--body);}
+svg.dia text{font-family:var(--font-mono); fill:currentColor;}
+
+@media (prefers-reduced-motion:reduce){
+  *{transition-duration:.01ms !important; animation-duration:.01ms !important;}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+<marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+<marker id="arc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D97757"/></marker>
+</defs></svg>
+
+
+<!-- Top Switcher Bar between 2 Projects -->
+<div id="dual-app-switcher" style="position:fixed; top:0; left:0; right:0; height:36px; background:rgba(20,20,19,0.96); backdrop-filter:blur(10px); border-bottom:1px solid rgba(255,255,255,0.12); z-index:999999; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-family:'Figtree',system-ui,sans-serif; font-size:12px; color:#aaa;">
+  <div style="display:flex; align-items:center; gap:10px;">
+    <span style="display:inline-flex; align-items:center; gap:6px; color:#fff; font-weight:600; background:rgba(217,119,87,0.25); border:1px solid #D97757; padding:2px 10px; border-radius:12px;">
+      <span style="width:6px; height:6px; border-radius:50%; background:#D97757;"></span>
+      โปรเจกต์ 1: สไลด์บรรยาย (Harness and His Friends · 40 สไลด์)
+    </span>
+  </div>
+  <div style="display:flex; align-items:center; gap:10px;">
+    <a href="live.html#chapter1" style="color:#60a5fa; text-decoration:none; display:inline-flex; align-items:center; gap:6px; background:rgba(59,130,246,0.15); border:1px solid rgba(59,130,246,0.4); padding:3px 12px; border-radius:12px; font-weight:500; transition:all 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.3)'" onmouseout="this.style.background='rgba(59,130,246,0.15)'">
+      สลับไปโปรเจกต์ 2: Harness Live &amp; Pi from Scratch (เจาะลึกระบบ) ⚡ →
+    </a>
+  </div>
+</div>
+
+<div id="stage">
+  <div id="toprail">
+    <span class="sec" id="secname">Opening</span>
+    <span class="dot">/</span>
+    <span id="secsub">Harness and his friends</span>
+    <div id="bar"><i></i></div>
+  </div>
+
+  <div id="slides">
+
+
+<!-- ══ 01 TITLE ══ -->
+<section class="slide" data-sec="Opening (บทนำ)" data-title="หน้าปก (Title)">
+ <div class="wrap cols split" style="align-items:center;">
+  <div>
+    <p class="eyebrow">ถ่ายทอดสด (Live Session) &nbsp;·&nbsp; บรรยายพิเศษสถาปัตยกรรม Agent &nbsp;·&nbsp; Facebook</p>
+    <h1 style="font-size:clamp(36px,5.2vw,68px);line-height:1.15;">Harness<br><span style="color:var(--clay)">และผองเพื่อน</span></h1>
+    <p class="lede" style="margin-bottom:22px;max-width:54ch;">
+      <strong>ตัวโมเดล (Model)</strong> มักได้พื้นที่พาดหัวข่าว... แต่ <strong>Harness (โครงสร้างควบคุมระบบ)</strong> ต่างหากที่เป็นตัวตัดสินว่าคุณจะดึงศักยภาพของโมเดลออกมาใช้งานจริงได้มากน้อยแค่ไหน!
+    </p>
+    <div class="row" style="gap:8px;flex-wrap:wrap;">
+      <span class="tag clay">Why (ทำไมต้องรู้)</span>
+      <span class="tag clay">What (คืออะไร)</span>
+      <span class="tag clay">How (ใช้งานอย่างไร)</span>
+      <span class="tag">40 สไลด์เต็ม</span>
+      <span class="tag">~60 นาที</span>
+    </div>
+  </div>
+  <div class="term">
+    <div class="bar"><i></i><i></i><i></i><span>herdr · session: live (จำลองมัลติเพล็กเซอร์)</span></div>
+<pre><span class="cm"># 1 มนุษย์ คุม 3 เอเจนต์พร้อมกันในหน้าจอเดียว</span>
+<span class="kw">$</span> herdr split -d <span class="st">"claude"</span>   <span class="ok">● กำลังทำงาน (working)</span>
+<span class="kw">$</span> herdr split -d <span class="st">"codex"</span>    <span class="an">● รอคนอนุมัติ (blocked)</span>
+<span class="kw">$</span> herdr split -d <span class="st">"opencode"</span> <span class="cm">○ ว่างรอคำสั่ง (idle)</span>
+<span class="cm"># คอขวดไม่ได้อยู่ที่โมเดลอีกต่อไปแล้ว... มันคือ "ตัวคุณ" เอง!</span></pre>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 02 MAP ══ -->
+<section class="slide" data-sec="Opening (บทนำ)" data-title="แผนที่เนื้อหา (The map)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;แผนผังหลักสูตร (Opening)</p>
+  <h2>สิ่งที่เรากำลังจะไปสำรวจด้วยกัน</h2>
+  <p class="small" style="color:var(--muted);margin-bottom:26px;">กดแป้นพิมพ์ <kbd>O</kbd> เมื่อไหร่ก็ได้ เพื่อเปิดเมนูลัดกระโดดข้ามสไลด์ (Jump Menu)</p>
+  <div class="cols c3">
+    <div class="card">
+      <span class="num">PART 1 · WHY (ทำไม)</span>
+      <h3>ช่องว่างของ Harness (The harness gap)</h3>
+      <p>โมเดล AI ตัวเดียวกันเป๊ะ แต่ใส่โครงสร้างต่างกัน ผลลัพธ์ห่างกันถึง 34%! การเลือก Harness คือการตัดสินขีดความสามารถ ไม่ใช่แค่เรื่องธีมสวยงาม</p>
+    </div>
+    <div class="card">
+      <span class="num">PART 2 · WHAT (คืออะไร)</span>
+      <h3>Harness, Multiplexer, OS</h3>
+      <p>นิยามที่ถูกต้อง, กายวิภาคของ Loop การทำงาน, และทัวร์ระบบชั้นนำระดับโลก ทั้งฝั่ง Frontier (เชิงพาณิชย์) และ Open Source</p>
+    </div>
+    <div class="card">
+      <span class="num">PART 3 · HOW (ใช้งานอย่างไร)</span>
+      <h3>Control &amp; Loop (การคุมและปล่อยลูป)</h3>
+      <p>2 ทักษะสำคัญที่แยกคนที่ได้ผลลัพธ์ 2 เท่า ออกจากคนที่ได้ 10 เท่า พร้อมสูตรเมทริกซ์คำนวณต้นทุนแคชที่แท้จริง</p>
+    </div>
+    <div class="card">
+      <span class="num">PART 4 · FRIENDS (เพื่อนคู่ใจ)</span>
+      <h3>Multiplexers (ตัวคุมหลายโปรเซส)</h3>
+      <p>คนเดียวคุมหลายเอเจนต์ ทำไม tmux ถึงไม่ตอบโจทย์ยุคนี้ และทำไม herdr ถึงถูกสร้างมาเพื่อเอเจนต์โดยเฉพาะ</p>
+    </div>
+    <div class="card">
+      <span class="num">PART 5 · THE WALL (กำแพงอุปสรรค)</span>
+      <h3>Context Rot (บริบทเสื่อมสภาพ)</h3>
+      <p>เมื่อบริบทบวมจนโมเดลเริ่มเอ๋อ ไม่ใช่เรื่องมโนแต่มีตัวเลขวัดได้ พร้อมวิธีแก้อย่าง RLM และ prime-agent</p>
+    </div>
+    <div class="card">
+      <span class="num">PART 6 · BUILD (ลงมือสร้าง)</span>
+      <h3>Roll Your Own (สร้างขึ้นเอง)</h3>
+      <p>โค้ดลูปหลักของ Harness มีความยาวเพียง 40 บรรทัดเท่านั้น! แต่ทุกสิ่งที่อยู่หลังบรรทัด 40 ต่างหากคือระบบจริง</p>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 03 THE EQUATION ══ -->
+<section class="slide" data-sec="Why (ทำไม)" data-title="สมการผลลัพธ์ (The equation)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;ทำไมต้องเรียนรู้สิ่งนี้ (Why learn this)</p>
+  <h2>คุณยอมจ่ายเงินอัปเกรดโมเดลตัวใหม่ล่าสุด...<br>แต่ทำไมงานที่คุณได้กลับไม่ได้เพิ่มขึ้นเป็น 2 เท่า?</h2>
+  <div style="margin:clamp(20px,3.5vh,40px) 0;padding:clamp(20px,3vw,34px);background:var(--surface);border:1px solid var(--rule);border-radius:12px;text-align:center;">
+    <div style="font-family:var(--font-display);font-size:clamp(22px,4.2vw,50px);color:var(--ink);letter-spacing:-.025em;line-height:1.25;">
+      ผลงานที่ได้ (Output) &nbsp;=&nbsp; <span style="color:var(--blue);">เพดานของโมเดล (Model ceiling)</span> &nbsp;<span style="color:var(--faint);">×</span>&nbsp; <em class="hl">ระยะเอื้อมของ Harness (Harness reach)</em>
+    </div>
+    <p class="small" style="max-width:68ch;margin:16px auto 0;color:var(--muted);">
+      <strong>นี่คือ "ผลคูณ" (Product) ไม่ใช่ผลบวก!</strong> โมเดล AI เป็นตัวกำหนดว่าเพดานความฉลาดสูงสุดอยู่ตรงไหน แต่ Harness เป็นตัวกำหนดว่าคุณจะเอื้อมไปแตะเพดานนั้นได้กี่เปอร์เซ็นต์ ถ้าตัวคูณฝั่ง Harness ต่ำ โมเดลระดับเรือธงจะทำงานได้แย่พอๆ กับโมเดลปีที่แล้ว!
+    </p>
+  </div>
+  <div class="cols c2">
+    <div class="lift">
+      <h3>โมเดล (Model) คือสิ่งที่คุณ "เช่าเขาใช้"</h3>
+      <p class="small">คุณไม่ได้เป็นเจ้าของ ไม่สามารถเข้าไปคุมเนื้อในได้ และคู่แข่งทุกคนของคุณก็จ่ายเงินซื้อโมเดลตัวเดียวกับคุณได้ทันที</p>
+    </div>
+    <div class="lift">
+      <h3>Harness คือสิ่งที่คุณ "เป็นเจ้าของและควบคุมได้"</h3>
+      <p class="small">กลยุทธ์จัดบริบท (Context), เครื่องมือ (Tools), สิทธิ์การรัน (Permissions), และระบบตรวจความถูกต้อง (Verification) นี่คือครึ่งหนึ่งที่ทำให้คุณสร้างความได้เปรียบแบบสะสม</p>
+    </div>
+  </div>
+  <p class="src">หมายเหตุชี้แจง: ไม่มีผู้ให้บริการรายใดประกาศสมการนี้เป็นสูตรทางการ แต่นี่คือแบบจำลองความคิด (Mental Model) ที่มีข้อมูลตัวเลขจริงวัดผลรองรับในอีก 3 สไลด์ถัดไป</p>
+ </div>
+</section>
+
+<!-- ══ 04 EVIDENCE ══ -->
+<section class="slide" data-sec="Why (ทำไม)" data-title="หลักฐาน: ความแปรปรวนของ Harness (Harness variance)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;ทำไมต้องเรียนรู้สิ่งนี้ (Why learn this)</p>
+  <h2>โมเดลเดียวกันเป๊ะ แต่ Harness ต่างกัน คะแนนต่างกันฟ้ากับเหว!</h2>
+  <p class="small" style="color:var(--muted);margin-bottom:clamp(16px,2.4vh,28px);max-width:75ch;">
+    ทุกคู่ทดสอบด้านล่างนี้ใช้ <strong>โมเดลตัวเดียวกัน 100%</strong> และวัดผลบน <strong>ชุดข้อสอบ Benchmark ตัวเดียวกันเป๊ะ</strong> สิ่งเดียวที่เปลี่ยนไปคือโครงสร้าง (Scaffold/Harness) ที่หุ้มอยู่รอบตัวมัน
+  </p>
+
+  <div class="barchart" id="chartA">
+    <div class="bgroup">
+      <div class="lab">Claude Opus 4.5<small>SWE-bench Pro (แก้โจทย์บั๊กจริง)</small></div>
+      <div class="bars">
+        <div class="brow"><div class="btrack"><i data-w="45.9"></i></div><span class="bv">45.9%</span></div>
+        <div class="brow hi"><div class="btrack"><i data-w="55.4"></i></div><span class="bv">55.4%</span></div>
+        <div class="row" style="gap:14px;"><span class="bl">ใช้ SEAL harness</span><span class="bl" style="color:var(--clay)">ใช้ Claude Code harness</span><span class="bcap">+9.5 คะแนน</span></div>
+      </div>
+    </div>
+    <div class="bgroup">
+      <div class="lab">Claude Sonnet 4.5<small>SWE-bench Verified Mini · HAL</small></div>
+      <div class="bars">
+        <div class="brow"><div class="btrack"><i data-w="34"></i></div><span class="bv">34%</span></div>
+        <div class="brow hi"><div class="btrack"><i data-w="68"></i></div><span class="bv">68%</span></div>
+        <div class="row" style="gap:14px;"><span class="bl">HAL Generalist</span><span class="bl" style="color:var(--clay)">SWE-Agent</span><span class="bcap">คะแนนพุ่ง 2 เท่า!</span></div>
+      </div>
+    </div>
+    <div class="bgroup">
+      <div class="lab">GPT-5 Medium<small>SWE-bench Verified Mini · HAL</small></div>
+      <div class="bars">
+        <div class="brow"><div class="btrack"><i data-w="12"></i></div><span class="bv">12%</span></div>
+        <div class="brow hi"><div class="btrack"><i data-w="46"></i></div><span class="bv">46%</span></div>
+        <div class="row" style="gap:14px;"><span class="bl">HAL Generalist</span><span class="bl" style="color:var(--clay)">SWE-Agent</span><span class="bcap">+34 คะแนนเต็มๆ</span></div>
+      </div>
+    </div>
+    <div class="bgroup">
+      <div class="lab">โมเดล Frontier ตัวเดิม<small>Terminal-Bench 2.0 (งานสั่งการเทอร์มินัล)</small></div>
+      <div class="bars">
+        <div class="brow"><div class="btrack"><i data-w="52.8"></i></div><span class="bv">52.8%</span></div>
+        <div class="brow hi"><div class="btrack"><i data-w="66.5"></i></div><span class="bv">66.5%</span></div>
+        <div class="row" style="gap:14px;"><span class="bl">Scaffold พื้นฐานทั่วไป</span><span class="bl" style="color:var(--clay)">+ จัดพรอมต์, มิดเดิลแวร์, ตรวจสอบผล</span><span class="bcap">+13.7 คะแนน</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:22px;"><b>ต่อไปนี้จงอ่านผล Benchmark ใหม่:</b>
+    สถาบัน Scale AI ระบุว่าผลคะแนนแกว่งตัว <strong>10–20 คะแนน</strong> เกิดจากตัว Harness เพียงอย่างเดียว! และคะแนนของค่ายผู้ผลิตที่ใช้ Scaffold เฉพาะตัวจะสูงกว่ามาตรฐานกลางถึง 10–30 คะแนน ดังนั้นการพูดถึงคะแนนโมเดลโดยไม่ระบุว่าใช้ Harness ตัวไหน คือข้อมูลที่ไม่สมบูรณ์</div>
+  <p class="src">แหล่งข้อมูล: "Stop Comparing LLM Agents Without Disclosing the Harness," arXiv:2605.23950 · การวิเคราะห์ลีดเดอร์บอร์ด Scale AI SWE-bench Pro</p>
+ </div>
+</section>
+
+<!-- ══ 05 CONSEQUENCES ══ -->
+<section class="slide" data-sec="Why (ทำไม)" data-title="สิ่งนี้มีความหมายต่อคุณอย่างไร (What that means for you)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;ทำไมต้องเรียนรู้สิ่งนี้ (Why learn this)</p>
+  <h2>3 ข้อสรุปที่เปลี่ยนวิธีคิดในการทำงาน</h2>
+  <div class="cols c3" style="margin-top:clamp(18px,3vh,34px);">
+    <div class="card">
+      <span class="num">01</span>
+      <h3>การเลือก Harness คือการตัดสินขีดความสามารถ</h3>
+      <p>ไม่ใช่เรื่องความชอบส่วนตัวเรื่องธีมหรือปุ่มลัด มันมีมูลค่าเท่ากับคะแนนความสำเร็จของงานจริงหลักสิบเปอร์เซ็นต์ ซึ่งมากกว่าการอัปเกรดโมเดลส่วนใหญ่ด้วยซ้ำ</p>
+    </div>
+    <div class="card">
+      <span class="num">02</span>
+      <h3>ทักษะ Harness ส่งต่อข้ามยุคได้ แต่ทักษะโมเดลไม่</h3>
+      <p>ทริคพรอมต์ที่ปรับจูนมาเพื่อโมเดลรุ่นหนึ่ง พอโมเดลรุ่นใหม่ออกมาก็ใช้ไม่ได้แล้ว แต่วิธีการจัด Context, การคุม Permission, และการตรวจทานผลลัพธ์ ใช้ได้กับทุกโมเดลตลอดไป</p>
+    </div>
+    <div class="card">
+      <span class="num">03</span>
+      <h3>คุณมักใช้งานสิ่งที่จ่ายเงินไปแล้วได้ไม่คุ้มค่า</h3>
+      <p>ก่อนที่คุณจะตัดสินใจจ่ายเงินซื้อโมเดลที่แพงขึ้น ลองเช็คดูก่อนว่าโมเดลตัวเดิมที่คุณใช้อยู่ กำลังทำงานอยู่บน Harness ฝั่งที่ดึงคะแนนตกไป 34 แต้มหรือไม่</p>
+    </div>
+  </div>
+  <div class="note" style="margin-top:26px;"><b>ความจริงที่หลายคนมองข้าม:</b>
+    ถ้ามีสองทีมวิศวกรที่ซื้อโมเดลเรือธงตัวเดียวกันเป๊ะ แต่ทีมหนึ่งส่งมอบงานได้มากกว่าอีกทีมถึง 2 เท่า... ความต่างไม่ได้อยู่ที่ตัวโมเดล แต่อยู่ที่ทุกเรื่องที่เรากำลังจะพูดถึงในสไลด์ชุดนี้!</div>
+ </div>
+</section>
+
+<!-- ══ 06 WHAT IS A HARNESS ══ -->
+<section class="slide" data-sec="What (คืออะไร)" data-title="Harness คืออะไร? (What is a harness?)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;นิยามพื้นฐาน (What)</p>
+  <h2>Harness คืออะไรกันแน่?</h2>
+  <div class="cols split" style="margin-top:18px;">
+    <div>
+      <p class="lede" style="color:var(--ink);">Harness คือ "โปรแกรม" ที่เปลี่ยนโมเดลทำนายข้อความ (Text-completion model) ให้กลายเป็น <strong>Agent (เอเจนต์ทำงานอัตโนมัติ)</strong></p>
+      <p class="small">มันทำหน้าที่ถือครอง 4 สิ่งสำคัญที่ตัวโมเดล AI เองไม่มีทางทำได้ด้วยตัวเอง:</p>
+      <ul class="small" style="padding-left:18px;line-height:1.75;margin:10px 0 16px;">
+        <li><strong>วงลูป (The loop):</strong> การสั่งรันโมเดลซ้ำๆ ต่อเนื่องจนกว่างานจะเสร็จสิ้น</li>
+        <li><strong>หน้าต่างข้อมูล (The window):</strong> การตัดสินใจว่าไฟล์ใดบ้างที่ควรนำเข้าไปให้โมเดลอ่าน</li>
+        <li><strong>ขอบเขตความปลอดภัย (The boundary):</strong> สิทธิ์ในการอ่าน, เขียนไฟล์, และรันคำสั่ง bash ในเครื่อง</li>
+        <li><strong>บันทึกประวัติ (The transcript):</strong> การเก็บรักษาความทรงจำของการสนทนา และบีบอัดเมื่อข้อมูลเริ่มล้น</li>
+      </ul>
+      <div class="note"><b>เปรียบเทียบให้เห็นภาพสำหรับมือใหม่:</b>
+        โมเดล AI เปรียบเหมือน <em>"เครื่องยนต์ทรงพลัง"</em> แต่ตัวมันเองวิ่งไปไหนไม่ได้... ส่วน Harness คือ <em>"โครงรถยนต์ คันเร่ง พวงมาลัย เบรก และถังน้ำมัน"</em> ที่ประกอบเข้าด้วยกันจนกลายเป็นรถที่ขับไปถึงจุดหมายได้จริง!</div>
+    </div>
+    <div class="stack">
+      <div class="card" style="border-left:3px solid var(--blue);">
+        <span class="num" style="color:var(--blue)">โมเดล (THE MODEL)</span>
+        <p class="small" style="margin:0;">ฟังก์ชันไร้สถานะ (Stateless function): รับข้อความก้อนหนึ่งเข้ามา แล้วเดาคำถัดไปที่น่าจะใช่ที่สุดออกมา จบแค่นั้น ไม่มีความจำ ไม่มีการลงมือทำ</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--clay);">
+        <span class="num" style="color:var(--clay)">HARNESS</span>
+        <p class="small" style="margin:0;">โปรเซสที่มีสถานะ (Stateful process): มีลูป, สิทธิ์เข้าถึงเครื่อง, ปลั๊กอินเครื่องมือ, ระบบตรวจสอบผล, และพื้นที่จัดเก็บประวัติการทำงาน</p>
+      </div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 07 AGENT LOOP ══ -->
+<section class="slide" data-sec="What (คืออะไร)" data-title="วงลูปของเอเจนต์ (The agent loop)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;กลไกการทำงาน (What) &nbsp;·&nbsp; <span style="color:var(--muted)">คลิกที่แต่ละขั้นตอนเพื่อดูคำอธิบายอย่างละเอียด</span></p>
+  <h2>วงลูป (The Loop) คือเคล็ดลับทั้งหมดของ AI Agent</h2>
+  <figure>
+  <svg class="dia" id="loopSvg" viewBox="0 0 980 300" role="img"
+    aria-label="วงลูปของเอเจนต์: รวมบริบท -> เรียกโมเดล -> ถอดรหัสผลลัพธ์ -> มีการเรียกเครื่องมือไหม? ถ้ามีให้รันเครื่องมือแล้วต่อท้ายผลลัพธ์แล้ววนลูป ถ้าไม่มีให้จบงาน">
+
+    <!-- forward path -->
+    <g stroke="currentColor" stroke-width="1.4" fill="none" opacity=".55">
+      <line x1="162" y1="77" x2="188" y2="77" marker-end="url(#ar)"/>
+      <line x1="344" y1="77" x2="370" y2="77" marker-end="url(#ar)"/>
+      <line x1="526" y1="77" x2="534" y2="77" marker-end="url(#ar)"/>
+      <line x1="658" y1="77" x2="698" y2="77" marker-end="url(#ar)"/>
+    </g>
+    <!-- loop back path, accented -->
+    <g stroke="#D97757" stroke-width="1.6" fill="none">
+      <path d="M596 119 L596 190" marker-end="url(#arc)"/>
+      <path d="M556 217 L534 217" marker-end="url(#arc)"/>
+      <path d="M374 217 L88 217 L88 108" marker-end="url(#arc)"/>
+    </g>
+
+    <g class="node" data-i="0" style="cursor:pointer">
+      <rect x="14" y="50" width="148" height="54" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.2"/>
+      <text x="88" y="70" text-anchor="middle" font-size="10" fill="#D97757" letter-spacing="1">STEP 1 (ขั้นที่ 1)</text>
+      <text x="88" y="88" text-anchor="middle" font-size="11.5">รวบรวมบริบท (Context)</text>
+    </g>
+    <g class="node" data-i="1" style="cursor:pointer">
+      <rect x="196" y="50" width="148" height="54" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.2"/>
+      <text x="270" y="70" text-anchor="middle" font-size="10" fill="#D97757" letter-spacing="1">STEP 2 (ขั้นที่ 2)</text>
+      <text x="270" y="88" text-anchor="middle" font-size="11.5">เรียกใช้โมเดล (Call Model)</text>
+    </g>
+    <g class="node" data-i="2" style="cursor:pointer">
+      <rect x="378" y="50" width="148" height="54" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.2"/>
+      <text x="452" y="70" text-anchor="middle" font-size="10" fill="#D97757" letter-spacing="1">STEP 3 (ขั้นที่ 3)</text>
+      <text x="452" y="88" text-anchor="middle" font-size="11.5">แยกผลลัพธ์ (Parse)</text>
+    </g>
+    <g class="node" data-i="3" style="cursor:pointer">
+      <polygon points="596,37 660,77 596,117 532,77" fill="var(--manilla)" stroke="currentColor" stroke-width="1.2"/>
+      <text x="596" y="81" text-anchor="middle" font-size="11">สั่งรัน Tool ไหม?</text>
+    </g>
+    <g class="node" data-i="5" style="cursor:pointer">
+      <rect x="700" y="50" width="140" height="54" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.2"/>
+      <text x="770" y="70" text-anchor="middle" font-size="10" fill="#D97757" letter-spacing="1">EXIT (จบงาน)</text>
+      <text x="770" y="88" text-anchor="middle" font-size="11.5">ส่งคำตอบสุดท้าย</text>
+    </g>
+    <g class="node" data-i="4" style="cursor:pointer">
+      <rect x="556" y="190" width="148" height="54" rx="8" fill="var(--surface)" stroke="#D97757" stroke-width="1.4"/>
+      <text x="630" y="210" text-anchor="middle" font-size="10" fill="#D97757" letter-spacing="1">STEP 4 (ขั้นที่ 4)</text>
+      <text x="630" y="228" text-anchor="middle" font-size="11.5">รันเครื่องมือ (Exec Tools)</text>
+    </g>
+    <g class="node" data-i="6" style="cursor:pointer">
+      <rect x="374" y="190" width="160" height="54" rx="8" fill="var(--surface)" stroke="#D97757" stroke-width="1.4"/>
+      <text x="454" y="210" text-anchor="middle" font-size="10" fill="#D97757" letter-spacing="1">STEP 5 (ขั้นที่ 5)</text>
+      <text x="454" y="228" text-anchor="middle" font-size="11.5">ต่อผลลัพธ์เข้าบริบท</text>
+    </g>
+
+    <g font-size="10" fill="currentColor" opacity=".75">
+      <text x="678" y="68" text-anchor="middle">ไม่มี (No)</text>
+      <text x="608" y="156">มี (Yes)</text>
+      <text x="88" y="164" text-anchor="middle">วนรอบถัดไป (Next turn)</text>
+    </g>
+    <text x="14" y="285" font-size="10.5" fill="currentColor" opacity=".7">ทุกสิ่งที่อุตสาหกรรม AI แข่งขันและพัฒนาสร้างมูลค่า ล้วนอยู่ในขั้นตอนที่ 1, 4 และ 5 ทั้งสิ้น</text>
+  </svg>
+  <figcaption>วงลูปของเอเจนต์ (Agent Loop): ขั้นตอนที่ 1, 4 และ 5 คือจุดที่ Harness แต่ละเจ้าสร้างความแตกต่าง ส่วนขั้นตอนที่ 2 คือสิ่งที่คุณจ่ายเงินเช่าเขาใช้</figcaption>
+  </figure>
+  <div class="card" id="loopOut" style="margin-top:18px;min-height:78px;">
+    <span class="num">STEP 1 · ASSEMBLE CONTEXT (รวบรวมบริบท)</span>
+    <p>ระบบนำ System prompt, นิยามเครื่องมือ (Tool schemas), ไฟล์ความจำโปรเจกต์ (<code>CLAUDE.md</code> / <code>AGENTS.md</code>), ไฟล์ที่แนบมา, และประวัติการคุยทั้งหมด มารวมเป็นข้อความก้อนเดียวก่อนส่ง นี่คือจุดที่มีพลังส่งผลต่อความฉลาดของเอเจนต์มากที่สุด แต่คนส่วนใหญ่มักมองข้ามไป!</p>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 08 ANATOMY ══ -->
+<section class="slide" data-sec="What (คืออะไร)" data-title="กายวิภาค 6 ส่วนของ Harness (Anatomy)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;ส่วนประกอบภายใน (What)</p>
+  <h2>6 ชิ้นส่วนสำคัญ และทุก Harness วางเดิมพันในแต่ละชิ้นไม่เหมือนกัน</h2>
+  <div class="cols c3" style="margin-top:clamp(16px,2.6vh,30px);">
+    <div class="card">
+      <span class="num">A · CONTEXT ASSEMBLER (ตัวรวมบริบท)</span>
+      <h3>สิ่งที่โมเดลจะได้มองเห็น</h3>
+      <p>System prompt, ไฟล์ความจำ, ไฟล์โค้ดที่อ่าน, ระบบดึงข้อมูล (RAG), และการบีบอัดข้อมูลเมื่อบริบทล้น นี่คือตัวกำหนดคุณภาพของผลงานที่ใหญ่ที่สุด</p>
+    </div>
+    <div class="card">
+      <span class="num">B · DISPATCHER (ตัวแปลงคำสั่ง)</span>
+      <h3>การอ่านโครงสร้างคำตอบ</h3>
+      <p>แปลง JSON หรือ Tool Call Blocks ออกมาเป็นการกระทำจริง รองรับการแก้ไขปัญหาเมื่อโมเดลส่งพารามิเตอร์ผิดพลาด และจัดลำดับคิวการเรียกใช้งาน</p>
+    </div>
+    <div class="card">
+      <span class="num">C · TOOL RUNTIME (สภาพแวดล้อมรันเครื่องมือ)</span>
+      <h3>จุดที่คำสั่งสัมผัสกับโลกจริง</h3>
+      <p>ระบบตรวจสอบสิทธิ์ (Permissions), ระบบแยกสภาพแวดล้อมปลอดภัย (Sandboxing), กำหนดเวลาตัดจบ (Timeouts), และการเชื่อมต่อผ่านโพรโทคอล MCP</p>
+    </div>
+    <div class="card">
+      <span class="num">D · STATE MACHINE (ตัวจัดการสถานะ)</span>
+      <h3>ประวัติและกิ่งก้านการทำงาน</h3>
+      <p>บันทึกประวัติการคุยแบบแตกกิ่งได้ (Branchable), ความสามารถในการย้อนกลับ (Undo), และการบันทึกเซสชันลงดิสก์เพื่อกลับมาทำงานต่อได้</p>
+    </div>
+    <div class="card">
+      <span class="num">E · COMPACT / PRUNE (ระบบบีบอัดบริบท)</span>
+      <h3>การป้องกันไม่ให้บริบทล้น</h3>
+      <p>การตัดทอนผลลัพธ์ของคำสั่งเทอร์มินัลขนาดยาว, การสรุปใจความรอบที่ผ่านมา, และการรักษาโครงสร้างหน้าต่างข้อมูลไม่ให้ประสิทธิภาพลดลง</p>
+    </div>
+    <div class="card">
+      <span class="num">F · OBSERVABILITY (การสังเกตการณ์)</span>
+      <h3>การมองเห็นสิ่งที่เกิดขึ้นจริง</h3>
+      <p>การบันทึก Log การตัดสินใจ, การนับจำนวนโทเคน, การติดตามอัตรา Cache Hit, และการส่ง Telemetry ตรวจสอบข้อผิดพลาดของเครื่องมือ</p>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 09 TOOL ZOO ══ -->
+<section class="slide" data-sec="What (คืออะไร)" data-title="สวนสัตว์เครื่องมือและ Harness 28 ตัว (The tool zoo)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;ระบบและเครื่องมือยอดนิยม (What) &nbsp;·&nbsp; <span style="color:var(--muted)">คลิกที่การ์ดเพื่อพลิกดูรายละเอียด (Flip to reveal)</span></p>
+  <h2>สวนสัตว์รวบรวม Harness &amp; เครื่องมือคู่ใจ</h2>
+  <div class="row" id="zooBar" style="margin:0 0 14px;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+    <div class="row" id="zooFilter" style="gap:7px;flex-wrap:wrap;">
+      <button class="chip" data-f="all" aria-pressed="true">ทั้งหมด (all)</button>
+      <button class="chip" data-f="frontier" aria-pressed="false">Frontier (เรือธง)</button>
+      <button class="chip" data-f="oss" aria-pressed="false">Open Source</button>
+      <button class="chip" data-f="mux" aria-pressed="false">Multiplexer</button>
+      <button class="chip" data-f="term" aria-pressed="false">Terminal &amp; OS</button>
+      <button class="chip" data-f="other" aria-pressed="false">เครื่องมือเสริม</button>
+    </div>
+    <div class="row" style="gap:7px;">
+      <span id="zooScore" class="tag">เปิดดูแล้ว 0 / 28</span>
+      <button class="rbtn" id="zooAll">เปิดดูทั้งหมด</button>
+      <button class="rbtn" id="zooReset">รีเซ็ตปิดการ์ด</button>
+    </div>
+  </div>
+  <div id="zoo">
+    <button type="button" class="flip zi" data-c="frontier" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Claude Code</span><span class="fdesc">CLI · Anthropic · Fable 5.1 / Opus</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="frontier" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Cowork</span><span class="fdesc">Desktop/Web · Anthropic สำหรับงานทั่วไป</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="frontier" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Codex</span><span class="fdesc">CLI+Cloud · OpenAI · ขุมพลัง GPT-6</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="frontier" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Cursor</span><span class="fdesc">IDE+CLI · Composer 2.5 อัจฉริยะ</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="frontier" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Grok Build</span><span class="fdesc">CLI · xAI · กระจาย 8 ซับเอเจนต์คู่ขนาน</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="frontier" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Grok Bot</span><span class="fdesc">เอเจนต์บนคลาวด์ ทำงานต่อแม้ปิดเครื่อง</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="frontier" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Antigravity CLI</span><span class="fdesc">Go · Google · มาแทนที่ Gemini CLI เดิม</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="frontier" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Devin Desktop</span><span class="fdesc">Cognition · ทำงานสลับ Harness ได้ผ่าน ACP</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="frontier" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Factory Droid</span><span class="fdesc">Enterprise · แบ่งเอเจนต์ตามบทบาทเฉพาะทาง</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="oss" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">opencode</span><span class="fdesc">TS · MIT · Anomaly · TUI สวยงาม</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="oss" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">opencode2</span><span class="fdesc">เวอร์ชัน v2 ปรับสถาปัตยกรรมปลั๊กอินใหม่</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="oss" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">pi</span><span class="fdesc">TS · MIT · "Harness มินิมอลที่สุด อ่านโค้ดง่าย"</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="oss" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">omp <span class="tag">oh-my-pi</span></span><span class="fdesc">TS+Rust · ฝัง LSP &amp; DAP Debugger ในตัว</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="oss" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">dsh</span><span class="fdesc">DeepSeek Harness · ทุกอย่างคือปลั๊กอิน</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="oss" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">feynman</span><span class="fdesc">เอเจนต์งานวิจัยเอกสาร ไม่ใช่เขียนโค้ด</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="oss" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">prime-agent</span><span class="fdesc">Harness ที่เขียนโค้ดแก้ไขพัฒนาตัวเองได้</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="oss" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Aider</span><span class="fdesc">Python · จุดเด่นออโต้ Commit Git ทุกก้าว</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="oss" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Cline / Roo</span><span class="fdesc">VS Code Extension · ขออนุมัติก่อนแก้ไขไฟล์</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="oss" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Zed</span><span class="fdesc">Rust IDE เร็วสูงปรี๊ด · ฝังพาเนลเอเจนต์ ACP</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="mux" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">tmux</span><span class="fdesc">C · มาตรฐานดั้งเดิม แต่ไม่เข้าใจสถานะเอเจนต์</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="mux" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">zellij</span><span class="fdesc">Rust · ปลั๊กอิน WASM · จัดเลย์เอาต์ยืดหยุ่น</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="mux" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">cmux</span><span class="fdesc">Swift · macOS · พัฒนาต่อยอดบน Ghostty</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="mux" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">herdr</span><span class="fdesc">Rust · ออกแบบเพื่อสลับดูสถานะเอเจนต์โดยเฉพาะ</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="term" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Omarchy</span><span class="fdesc">Arch Linux + Hyprland ติดตั้งเอเจนต์ 10 ตัวในระดับ OS</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="term" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Ghostty</span><span class="fdesc">GPU Terminal Emulator ที่เร็วมาก (ไม่ใช่ Mux)</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="term" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Warp</span><span class="fdesc">Rust Terminal ฉลาดพร้อมฟังก์ชัน Agent Orchestration</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="other" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">Comet</span><span class="fdesc">Perplexity · บราวเซอร์เอเจนต์กดซื้อของแทน</span></span></span>
+    </button>
+    <button type="button" class="flip zi" data-c="other" aria-label="Flip card">
+      <span class="fin"><span class="fback"></span><span class="ffront"><span class="fname">MCP</span><span class="fdesc">โพรโทคอลเชื่อมต่อเครื่องมือ (ไม่ใช่ตัว Harness)</span></span></span>
+    </button>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 10 ANTHROPIC ══ -->
+<section class="slide" data-sec="Frontier (เรือธง)" data-title="Anthropic: Claude Code & Cowork">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;Harness ระดับแถวหน้า (Frontier) &nbsp;·&nbsp; 1 จาก 3</p>
+  <h2>Anthropic — ลูปการทำงานเดียวกัน แต่นำเสนอ 2 รูปแบบผู้ใช้</h2>
+  <div class="cols c2" style="margin-top:16px;">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:10px;">
+        <h3 style="margin:0;font-size:clamp(18px,2vw,24px);">Claude Code</h3>
+        <span class="tag clay">เน้นใช้ใน Terminal</span>
+      </div>
+      <p class="small">Harness บนเทอร์มินัล สำหรับนักพัฒนาซอฟต์แวร์ ทำงานบนโค้ดเบสโดยตรง</p>
+      <ul class="small" style="padding-left:18px;line-height:1.72;margin:12px 0 0;">
+        <li>เครื่องมือมาตรฐาน: <code>Read</code>, <code>Edit</code>, <code>Bash</code>, <code>Grep</code>, <code>Find</code></li>
+        <li>ไฟล์ความจำโปรเจกต์: <code>CLAUDE.md</code> อ่านทุกครั้งเมื่อเริ่มรอบการทำงาน</li>
+        <li><strong>การจัดการแคชที่ละเอียด:</strong> คำสั่ง <code>/cost</code> และ <code>/context</code> แสดงสถิติการดึงแคชแบบเรียลไทม์</li>
+        <li>มีระบบจัดการสิทธิ์ (Permission Prompt) ก่อนรันคำสั่งอันตราย</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:10px;">
+        <h3 style="margin:0;font-size:clamp(18px,2vw,24px);">Cowork</h3>
+        <span class="tag olive">สำหรับบุคคลทั่วไปและองค์กร</span>
+      </div>
+      <p class="small">แอปบนเดสก์ท็อปและเว็บ ใช้ลูปเดียวกับ Claude Code แต่เปลี่ยนเครื่องมือเป็นไฟล์เอกสาร, อีเมล, สเปรดชีต, และงานสำนักงาน</p>
+      <div class="row" style="gap:16px;margin-top:14px;">
+        <div class="stat"><span class="v" style="font-size:clamp(24px,3vw,36px)">91.3%</span><span class="k">งานทั่วไป / ความรู้</span></div>
+        <div class="stat"><span class="v" style="font-size:clamp(24px,3vw,36px)">8.7%</span><span class="k">เขียนโค้ด</span></div>
+      </div>
+      <p class="src" style="margin-top:8px;">สถิติการใช้งานจริงของ Cowork — รูปแบบของ Agent Harness เริ่มขยายตัวออกจากแค่วงการเขียนโปรแกรมสู่คนทำงานทุกสาขา</p>
+    </div>
+  </div>
+  <div class="note" style="margin-top:20px;"><b>บทเรียนสำคัญที่ต้องจดจำ:</b>
+    ทั้งสองระบบนี้ใช้ลูปหลัก (Agent Loop) เหมือนกันทุกประการ ต่างกันแค่หน้าตา UI, เครื่องมือที่ให้ใช้งาน และสิทธิ์การเข้าถึง นี่คือหลักฐานชัดเจนที่สุดว่า Harness คือการตัดสินใจทางผลิตภัณฑ์ (Product Decision) ไม่ใช่เรื่องของโมเดล AI</div>
+ </div>
+</section>
+
+<!-- ══ 11 OPENAI & CURSOR ══ -->
+<section class="slide" data-sec="Frontier (เรือธง)" data-title="OpenAI Codex & Cursor">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;Harness ระดับแถวหน้า (Frontier) &nbsp;·&nbsp; 2 จาก 3</p>
+  <h2>Codex และ Cursor — การนำโครงสร้าง Harness ออกขายเป็นสินค้า</h2>
+  <div class="cols c2" style="margin-top:16px;">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:10px;">
+        <h3 style="margin:0;font-size:clamp(18px,2vw,24px);">Codex</h3><span class="tag clay">OpenAI</span>
+      </div>
+      <p class="small">โอเพนซอร์ส CLI + ส่วนขยายบน IDE + คลาวด์เว็บ + แอปเดสก์ท็อป + กิตฮับ ขับเคลื่อนด้วย <strong>GPT-6 Astra</strong> และมี GPT-5.6 เป็นตัวเลือกรอง</p>
+      <ul class="small" style="padding-left:18px;line-height:1.72;margin:12px 0 0;">
+        <li><strong>Agents API:</strong> เปิดตัวสู่สาธารณะ — OpenAI นำ "Harness และโครงสร้างพื้นฐานเบื้องหลัง Codex" มาขายเป็นบริการ API ให้คนอื่นนำไปสร้างต่อ นี่คือการยอมรับอย่างเป็นทางการว่า Harness คือตัวผลิตภัณฑ์ที่แท้จริง!</li>
+        <li>รองรับ Git Worktrees แยกโฟลเดอร์ทำงาน, แสดงสถานะการบีบอัดบริบทแบบสดๆ</li>
+        <li>ฝังฟังก์ชัน Deep Research วิเคราะห์งานวิจัยในตัว และรับคำสั่งเสียงผ่าน GPT-Live-1</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:10px;">
+        <h3 style="margin:0;font-size:clamp(18px,2vw,24px);">Cursor</h3><span class="tag blue">Anysphere</span>
+      </div>
+      <p class="small">IDE ที่สร้างขึ้นมาเพื่อ AI โดยเฉพาะ พร้อมคำสั่ง <code>cursor-agent</code> ในเทอร์มินัล และเอเจนต์ที่รันอยู่เบื้องหลังบนคลาวด์ ใช้โมเดลเฉพาะทาง <strong>Composer 2.5</strong> ควบคู่กับโมเดลเรือธง</p>
+      <ul class="small" style="padding-left:18px;line-height:1.72;margin:12px 0 0;">
+        <li><strong>Cursor Projects:</strong> พื้นที่ทำงานคงอยู่ถาวรระดับเดือน ที่ส่งมอบงานให้เอเจนต์บนคลาวด์ช่วยทำต่อเนื่อง</li>
+        <li><strong>Origin:</strong> บริการโฮสต์โค้ดของตัวเอง พร้อมฟีเจอร์ AI ตรวจสอบและจัดการ Pull Request อัตโนมัติ</li>
+        <li>เครื่องคอมพิวเตอร์รันเอเจนต์แบบ Dynamic Pools พร้อมระบบ Prewarmed "Builds" ที่เปิดเอเจนต์ได้เร็วกว่าเดิม 3 เท่า</li>
+      </ul>
+      <p class="src" style="margin-top:10px;">สังเกตทิศทางของการพัฒนา: ทั้งคู่กำลังเปลี่ยนผ่านจาก "เครื่องมือช่วยเขียนโค้ดในเอดิเตอร์" ไปสู่ "กองทัพเอเจนต์ที่คุณส่งออกไปทำภารกิจ"</p>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 12 XAI, GOOGLE, PERPLEXITY ══ -->
+<section class="slide" data-sec="Frontier (เรือธง)" data-title="xAI, Google, Perplexity">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;Harness ระดับแถวหน้า (Frontier) &nbsp;·&nbsp; 3 จาก 3</p>
+  <h2>ผู้เล่นสำคัญอื่นๆ ในสมรภูมิ</h2>
+  <div class="cols c2" style="margin-top:14px;gap:16px;">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px;">
+        <h3 style="margin:0">Grok Build</h3><span class="tag">xAI · พฤษภาคม 2026</span>
+      </div>
+      <p class="small">เอเจนต์เขียนโค้ดบน CLI ใช้โมเดล <code>grok-code-fast-1</code> (Context 256K) หมัดเด็ดคือ: สั่งเปิด <strong>8 ซับเอเจนต์ทำงานคู่ขนานกัน โดยแต่ละตัวอยู่บน Git Worktree แยกโฟลเดอร์ของตัวเองเด็ดขาด</strong> ผ่านระบบ วางแผน → ตรวจสอบ → อนุมัติ ทำคะแนน SWE-bench Verified ได้ถึง 70.8%</p>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px;">
+        <h3 style="margin:0">Grok Bot</h3><span class="tag">xAI · สิงหาคม 2026</span>
+      </div>
+      <p class="small">เอเจนต์แบบมีชื่อประจำตัว (Named Agents) ที่ทำงานค้างอยู่บนเครื่องคลาวด์อย่างต่อเนื่อง แม้คุณจะปิดคอมพิวเตอร์ไปแล้ว มีการแชร์พื้นที่ทำงานและหน้าต่างเบราว์เซอร์ระหว่างบอต คุยกลุ่มหลายตัวพร้อมกัน และตั้งเวลาทำงานอัตโนมัติ ใกล้เคียงกับ "ระบบปฏิบัติการเอเจนต์" (Agent OS)</p>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px;">
+        <h3 style="margin:0">Antigravity CLI</h3><span class="tag olive">Google</span>
+      </div>
+      <p class="small"><strong>Gemini CLI ถูกยกเลิกไปแล้ว</strong> และส่งไม้ต่อให้กับ Antigravity CLI ที่เขียนด้วยภาษา Go รองรับการทำงานแบบ Multi-agent อะซิงโครนัส แชร์โครงสร้าง Harness ร่วมกับโปรแกรมเดสก์ท็อป Antigravity 2.0 พร้อมระบบ Skills, Hooks, Subagents และ Extensions</p>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px;">
+        <h3 style="margin:0">Comet</h3><span class="tag">Perplexity</span>
+      </div>
+      <p class="small">บราวเซอร์เอเจนต์ (Agentic Browser ทำงานบน Chromium) ใช้สรุปหน้าเว็บ, ร่างอีเมล, และกดทำธุรกรรมซื้อของแทนมนุษย์ ยกตัวอย่างขึ้นมาเพื่อให้เห็นความแตกต่างว่า Harness ใช้ลูปหลักเดียวกัน แค่เปลี่ยนเครื่องมือจากไฟล์ในเครื่องไปเป็นคำสั่งบนเว็บ</p>
+    </div>
+  </div>
+  <div class="note" style="margin-top:18px;"><b>แบบแผนร่วมที่ทุกคนทำเหมือนกัน:</b>
+    ผู้เล่นระดับแนวหน้าทุกคนเปิดตัว 3 สิ่งนี้เหมือนกันเป๊ะในปีนี้: 1) ซับเอเจนต์ทำงานคู่ขนาน, 2) การแยกโฟลเดอร์ Git Worktrees, และ 3) การทำงานค้างอยู่บนคลาวด์หลังปิดจอ การมาบรรจบกันนี้คือ <em>"มาตรฐานเทคโนโลยีปัจจุบัน (State of the Art)"</em></div>
+ </div>
+</section>
+
+<!-- ══ 13 FRONTIER COMPARISON ══ -->
+<section class="slide" data-sec="Frontier (เรือธง)" data-title="ตารางเปรียบเทียบ Frontier Harnesses">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;Harness ระดับแถวหน้า (Frontier)</p>
+  <h2>ตารางเปรียบเทียบเทียบเคียงแบบข้างต่อข้าง</h2>
+  <div class="tw" style="margin-top:18px;">
+    <table>
+      <thead><tr><th>ชื่อ Harness</th><th>ช่องทางใช้งาน (Surface)</th><th>โมเดลหลัก (Model)</th><th>จุดเด่นเฉพาะตัว (Standout)</th><th>การเปิดซอร์สโค้ด</th></tr></thead>
+      <tbody>
+        <tr><td class="name">Claude Code</td><td>CLI · IDE · Web · SDK</td><td>Claude Fable / Opus</td><td>ระบบวิเคราะห์แคช และการตั้งค่า TTL ในตัว</td><td><span class="tag">Closed (ปิด)</span></td></tr>
+        <tr><td class="name">Cowork</td><td>Desktop · Web · Mobile</td><td>ตระกูล Claude</td><td>ลูปเดียวกัน ใช้กับงานเอกสารและส่งงานข้ามเครื่อง</td><td><span class="tag">Closed (ปิด)</span></td></tr>
+        <tr><td class="name">Codex</td><td>CLI · IDE · Cloud · App</td><td>GPT-6 Astra</td><td>Agents API — ขายเป็นเซอร์วิสให้คนอื่นต่อยอด</td><td><span class="tag olive">CLI Open (เปิดเฉพาะ CLI)</span></td></tr>
+        <tr><td class="name">Cursor</td><td>IDE · CLI · Cloud</td><td>Composer 2.5 + หลายค่าย</td><td>Projects ค้างเป็นเดือน, โฮสต์โค้ดของตัวเอง</td><td><span class="tag">Closed (ปิด)</span></td></tr>
+        <tr><td class="name">Grok Build</td><td>CLI</td><td>grok-code-fast-1</td><td>แตก 8 ซับเอเจนต์ใน Git Worktrees แยกขาดจากกัน</td><td><span class="tag">Closed (ปิด)</span></td></tr>
+        <tr><td class="name">Grok Bot</td><td>Desktop · iPhone</td><td>ตระกูล Grok</td><td>เอเจนต์มีชื่อประจำตัว ทำงานต่อหลังปิดเซสชัน</td><td><span class="tag">Closed (ปิด)</span></td></tr>
+        <tr><td class="name">Antigravity CLI</td><td>CLI · Desktop</td><td>ตระกูล Gemini</td><td>เขียนด้วย Go รันมัลติเอเจนต์ มาแทนที่ Gemini CLI</td><td><span class="tag">Closed (ปิด)</span></td></tr>
+        <tr><td class="name">Devin Desktop</td><td>IDE</td><td>Devin + ค่ายอื่นผ่าน ACP</td><td>ศูนย์บัญชาการแบบ Kanban สลับ Harness ใต้แอปได้</td><td><span class="tag">Closed (ปิด)</span></td></tr>
+        <tr><td class="name">Amp</td><td>CLI · IDE</td><td>Claude + GPT-5 series</td><td>มีโหมด "Deep Mode" คิดลึกเป็นพิเศษ มีเวอร์ชันฟรี</td><td><span class="tag">Closed (ปิด)</span></td></tr>
+        <tr><td class="name">Factory Droid</td><td>CLI</td><td>เลือกได้หลายค่าย</td><td>แบ่งซับเอเจนต์เชี่ยวชาญตามบทบาทเฉพาะงานชัดเจน</td><td><span class="tag">Closed (ปิด)</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="src">หมายเหตุ: ค่าโมเดลตั้งต้นเปลี่ยนแปลงเร็วมาก โพรโทคอล ACP (Agent-Client Protocol) คือสิ่งที่น่าจับตา เพราะช่วยให้สลับ Harness ไส้ในได้โดยไม่ต้องเปลี่ยนหน้าตาโปรแกรม</p>
+ </div>
+</section>
+
+<!-- ══ 14 WHY OSS MATTERS ══ -->
+<section class="slide" data-sec="Open Source (โอเพนซอร์ส)" data-title="ทำไมโอเพนซอร์สถึงสำคัญ (Why OSS matters)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;โลกของโอเพนซอร์ส (Open Source)</p>
+  <h2>ทำไม Harness แบบเปิดถึงสำคัญมาก แม้คุณจะจ่ายเงินใช้แบบปิดก็ตาม</h2>
+  <div class="cols c2" style="margin-top:clamp(16px,3vh,32px);">
+    <div class="stack">
+      <div class="lift">
+        <h3>คุณสามารถเปิดอ่านโค้ดของลูปได้ทุกบรรทัด</h3>
+        <p class="small">ทุกข้อถกเถียงและเทคนิคที่เราจะพูดถึงใน Part 3 ไม่ว่าจะเป็นเรื่องลำดับการส่งแคช, ลูปการตรวจสอบผลลัพธ์, และการตัดทอนบริบท คุณสามารถเปิดเข้าไปดูโค้ดจริงบรรทัดต่อบรรทัดใน GitHub ของโครงการ Open Source ได้ทันที</p>
+      </div>
+      <div class="lift">
+        <h3>ไม่มีกำแพงจำกัดผู้ให้บริการ (No Vendor Lock-in)</h3>
+        <p class="small">วันนี้ใช้ Anthropic พรุ่งนี้อยากสลับไปใช้ DeepSeek หรือโมเดลโลคอลในเครื่องผ่าน Ollama และ vLLM ก็ทำได้ทันทีโดยไม่ต้องเปลี่ยนเครื่องมือหรือเปลี่ยนวิธีการทำงานใหม่</p>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="lift">
+        <h3>คุณสามารถปรับแต่งเพิ่มฟีเจอร์ได้เอง</h3>
+        <p class="small">ต้องการเชื่อมต่อฐานข้อมูลภายในองค์กร หรือต้องการสร้างระบบตรวจสอบโค้ดตามมาตรฐานเฉพาะของบริษัท? คุณสามารถเขียนฟังก์ชันแทรกลงไปในลูปได้โดยไม่ต้องรอผู้ผลิตภายนอกพัฒนา</p>
+      </div>
+      <div class="lift">
+        <h3>นี่คือห้องทดลองของไอเดียที่ก้าวหน้าที่สุด</h3>
+        <p class="small">ไอเดียอย่างเช่น Session History แบบแตกกิ่งก้าน (Branchable history) หรือแนวคิด RLM ที่เปลี่ยนบริบทเป็นตัวแปร ล้วนเกิดขึ้นและถูกทดสอบในคอมมูนิตี้โอเพนซอร์สก่อนเสมอ</p>
+      </div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 15 OPENCODE ══ -->
+<section class="slide" data-sec="Open Source (โอเพนซอร์ส)" data-title="opencode และ opencode2">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;โอเพนซอร์สตัวดัง (Open Source · the big one)</p>
+  <h2>opencode &nbsp;<span style="color:var(--faint);font-size:.6em;">·&nbsp; และการแยกตัวของ v2</span></h2>
+  <div class="cols split" style="margin-top:14px;">
+    <div class="stack">
+      <div class="row">
+        <span class="tag olive">ใบอนุญาต MIT</span>
+        <span class="tag">TypeScript</span>
+        <span class="tag">Anomaly (ทีมอดีต SST)</span>
+      </div>
+      <p class="small">หนึ่งใน Harness โอเพนซอร์สที่มีผู้ใช้งานมากที่สุด หน้าตาอินเทอร์เฟซในเทอร์มินัล (TUI) สวยงามทันสมัย และมีเวอร์ชัน Desktop ให้ใช้งาน</p>
+      <div class="card">
+        <span class="num">สถาปัตยกรรม 2 ระดับ: PLAN &amp; BUILD</span>
+        <p class="small">แบ่งการทำงานชัดเจน: เอเจนต์วางแผน (Plan agent) จะสำรวจโค้ดเบสและร่างแผนการทำงาน จากนั้นจะส่งต่อให้เอเจนต์ลงมือเขียน (Build agent) เป็นผู้แก้ไขโค้ดจริง ช่วยลดอาการเพ้อเจ้อและประหยัดโทเคน</p>
+      </div>
+      <ul class="small" style="padding-left:18px;line-height:1.75;margin:8px 0 0;">
+        <li>รองรับผู้ให้บริการโมเดลกว่า 20 ราย สลับได้อิสระ</li>
+        <li>มีระบบจัดการสิทธิ์และ Undo ย้อนกลับการแก้ไขโค้ดได้ทีละขั้นตอน</li>
+      </ul>
+    </div>
+    <div class="stack">
+      <div class="card" style="border-left:3px solid var(--clay);">
+        <span class="num" style="color:var(--clay)">การเปลี่ยนแปลงใน OPENCODE2 (V2)</span>
+        <h3 style="font-size:18px;margin-bottom:6px;">แยกสถาปัตยกรรมเป็นเซิร์ฟเวอร์แบบ Client-Server</h3>
+        <p class="small">ในเวอร์ชัน 2 ตัวไส้ในของ Harness จะรันเป็นเซิร์ฟเวอร์เบื้องหลังอย่างอิสระ ทำให้สามารถเชื่อมต่อกับหน้าต่าง UI ใดๆ ก็ได้ ไม่ว่าจะเป็นเว็บ, เทอร์มินัล, หรือปลั๊กอินใน VS Code</p>
+        <p class="small" style="margin-top:8px;color:var(--muted)">ข้อคิด: การแยกตัวนี้สะท้อนว่า Harness ได้เติบโตจากการเป็นแค่สคริปต์สั่งรัน สู่การเป็น "เลเยอร์บริการพื้นฐาน" (Infrastructure Service)</p>
+      </div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 16 PI & OMP ══ -->
+<section class="slide" data-sec="Open Source (โอเพนซอร์ส)" data-title="pi และ omp (ปรัชญาคนละขั้ว)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;โอเพนซอร์ส: มินิมอล vs ฟังก์ชันเต็มสูบ (Primitives vs Batteries)</p>
+  <h2>pi และ omp — สายเลือดเดียวกัน แต่ปรัชญาคนละขั้ว</h2>
+  <div class="cols c2" style="margin-top:14px;">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px;">
+        <h3 style="margin:0;font-size:clamp(18px,2vw,24px);">pi</h3>
+        <div class="row" style="gap:6px;"><span class="tag olive">MIT</span><span class="tag">TypeScript</span></div>
+      </div>
+      <p class="small">สร้างโดย Mario Zechner (badlogic) แห่ง Earendil Works (<code>pi.dev</code>) อธิบายตัวเองว่าเป็น <strong>"Minimal Agent Harness"</strong> — นี่คือโค้ดเบสที่อ่านง่ายและสะอาดที่สุดในการทำความเข้าใจกลไกของ Loop ในบทที่ 2</p>
+      <p class="small" style="margin-top:8px;"><strong>โมดูลหลัก:</strong> <code>pi-ai</code> (API รวม 15+ ค่าย), <code>pi-agent-core</code> (ตัวลูป), <code>pi-coding-agent</code> (CLI), <code>pi-tui</code> (การแสดงผล), <code>pi-telemetry</code></p>
+      <ul class="small" style="padding-left:18px;line-height:1.72;margin:10px 0 0;">
+        <li>4 โหมดการทำงาน: Interactive TUI, Print/JSON, RPC, SDK</li>
+        <li><strong>Tree-structured History:</strong> ประวัติเซสชันเป็นแบบต้นไม้ แตกกิ่งและย้อนกลับได้</li>
+        <li>สลับโมเดลกลางคันได้ทันทีด้วยคำสั่ง <code>/model</code></li>
+        <li>ปรัชญาชัดเจน: <em class="hl">สร้างส่วนประกอบพื้นฐาน (Primitives) ไม่ใช่ฟีเจอร์พะรุงพะรัง</em></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px;">
+        <h3 style="margin:0;font-size:clamp(18px,2vw,24px);">omp <span style="font-size:.6em;color:var(--muted)">oh-my-pi</span></h3>
+        <div class="row" style="gap:6px;"><span class="tag olive">MIT</span><span class="tag">TS + Rust</span></div>
+      </div>
+      <p class="small">สร้างโดย can1357 โดยฟอร์กมาจาก pi สโลแกนคือ "เอเจนต์เขียนโค้ดที่ฝังเครื่องมือของ IDE มาให้ครบครัน" ตรงไหนที่ pi ตัดทิ้ง omp จะเพิ่มเข้าไปอย่างจัดเต็ม!</p>
+      <ul class="small" style="padding-left:18px;line-height:1.72;margin:10px 0 0;">
+        <li><strong>เชื่อมต่อโมเดลกว่า 60 ค่าย</strong> พร้อม <strong>31 เครื่องมือในตัว</strong></li>
+        <li><strong>LSP Integration:</strong> เชื่อมต่อ Language Server Protocol เวลาแก้โค้ดโมเดลจะไม่เดาชื่อตัวแปรหรือฟังก์ชันมั่วๆ แต่ถามจาก LSP โดยตรง</li>
+        <li><strong>DAP Debugger:</strong> ฝังตัว Debugger เข้าไปในลูป เอเจนต์สามารถ Step ตรวจสอบการรันโค้ดทีละบรรทัดได้จริง!</li>
+        <li>คอมไพล์เป็นเนทีฟไบนารีตัวเดียว พกพาสะดวก ไม่ต้องลง Node.js หรือตัวเสริม</li>
+      </ul>
+    </div>
+  </div>
+  <div class="note" style="margin-top:16px;"><b>บทเรียนการออกแบบ:</b>
+    ลูปหลักข้างในเหมือนกันเป๊ะ แต่ได้เป็น 2 ผลิตภัณฑ์ที่ยอดเยี่ยมคนละแบบ pi มองว่า Harness ควรเป็นไลบรารีขนาดกะทัดรัด ส่วน omp มองว่ามันควรฉลาดรอบด้านและรู้โครงสร้างของ IDE ไม่มีใครผิดใครถูก นี่คือความหลากหลายทางสถาปัตยกรรม</div>
+ </div>
+</section>
+
+<!-- ══ 17 FEYNMAN & DSH ══ -->
+<section class="slide" data-sec="Open Source (โอเพนซอร์ส)" data-title="feynman และ dsh (งานวิจัย & ปลั๊กอิน)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;โอเพนซอร์ส: หลากหลายรูปแบบ (Two different shapes)</p>
+  <h2>feynman และ dsh — สองรูปทรงที่แตกต่างกันอย่างสิ้นเชิง</h2>
+  <div class="cols c2" style="margin-top:14px;">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px;">
+        <h3 style="margin:0;font-size:clamp(18px,2vw,24px);">feynman</h3>
+        <div class="row" style="gap:6px;"><span class="tag olive">MIT</span><span class="tag blue">งานวิจัย ไม่ใช่เขียนโค้ด</span></div>
+      </div>
+      <p class="small">โดย Companion Inc (<code>feynman.is</code>) เป็น <strong>AI Research Agent</strong> ไม่ใช่เอเจนต์เขียนโค้ด ใช้สำหรับทบทวนวรรณกรรมทางวิชาการ สรุปเปเปอร์วิทยาศาสตร์ และวางแผนทดลองซ้ำ (Replication)</p>
+      <ul class="small" style="padding-left:18px;line-height:1.72;margin:10px 0 0;">
+        <li>แบ่ง 4 บทบาทเอเจนต์: <strong>นักวิจัย (Researcher) · ผู้ตรวจทาน (Reviewer) · ผู้เขียน (Writer) · ผู้ตรวจสอบความถูกต้อง (Verifier)</strong></li>
+        <li>เชื่อมต่อฐานข้อมูลวิทยาศาสตร์ระดับโลก: PubMed, Europe PMC, ChEMBL, UniProt</li>
+        <li>ตรวจสอบความถูกต้องของการอ้างอิง (Citation Auditing) ป้องกันอาการหลอน</li>
+      </ul>
+      <p class="src" style="margin-top:8px;">ข้อคิด: "Harness" คือรูปทรงโครงสร้างทางวิศวกรรม ไม่จำกัดแค่การเขียนโค้ด การแบ่งหน้าที่ Verifier ที่นี่ก็นำไปใช้กับการตรวจสอบข้อเท็จจริงแทนการรันเทสต์</p>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px;">
+        <h3 style="margin:0;font-size:clamp(18px,2vw,24px);">dsh</h3>
+        <div class="row" style="gap:6px;"><span class="tag olive">MIT</span><span class="tag">DeepSeek Harness</span></div>
+      </div>
+      <p class="small">Harness จากทีม DeepSeek-AI ภายใต้สโลแกน: <em class="hl">"ทุกอย่างคือปลั๊กอิน (Everything is a Plugin)"</em> นี่คือโปรเจกต์ตัวอย่างที่เราจะใช้ในการสร้าง Harness ของเราเองใน Part 6</p>
+      <ul class="small" style="padding-left:18px;line-height:1.72;margin:10px 0 0;">
+        <li>เขียนด้วย TypeScript พัฒนาบนเฟรมเวิร์กปลั๊กอิน <strong>Cordis</strong></li>
+        <li>คำสั่ง CLI <code>dsh</code> และสั่งเปิดหน้าเว็บควบคุมได้ด้วย <code>npx @deepseek-ai/dsh web</code> ที่พอร์ต 3080</li>
+        <li>ทุกความสามารถแยกเป็นโมดูลปลั๊กอิน ค้นหาได้ผ่านแท็ก GitHub <code>dsh-plugin</code></li>
+      </ul>
+      <div class="note" style="margin-top:12px;"><b>ทำไม dsh ถึงเหมาะเป็นตัวอย่างเรียนรู้:</b>
+        เมื่อทุกอย่างเป็นปลั๊กอิน ตัว Harness ก็กลายเป็นแค่โฮสต์รองรับปลั๊กอิน ทำให้เราชี้ดูชิ้นส่วนทั้ง 6 ของสไลด์ที่ 8 ได้อย่างชัดเจนบรรทัดต่อบรรทัด</div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 18 OSS COMPARISON ══ -->
+<section class="slide" data-sec="Open Source (โอเพนซอร์ส)" data-title="ตารางเปรียบเทียบ Open Source">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;โลกของโอเพนซอร์ส (Open Source)</p>
+  <h2>เลือกใช้ตามปรัชญา ไม่ใช่ตามจำนวนดาวบน GitHub</h2>
+  <div class="tw" style="margin-top:18px;">
+    <table>
+      <thead><tr><th>โปรเจกต์</th><th>ภาษา</th><th>สัญญาอนุญาต</th><th>รูปแบบ (Shape)</th><th>ควรเลือกใช้เมื่อ…</th></tr></thead>
+      <tbody>
+        <tr><td class="name">opencode</td><td>TypeScript</td><td>MIT</td><td>TUI + Desktop</td><td>ต้องการเครื่องมือประจำวันที่สมบูรณ์แบบ มีระบบแยกเอเจนต์วางแผนและสร้าง</td></tr>
+        <tr><td class="name">opencode2</td><td>TypeScript</td><td>MIT</td><td>Beta (Client-Server)</td><td>ต้องการระบบปลั๊กอินแบบใหม่ และต้องการต่อเชื่อมกับ UI หลายรูปแบบ</td></tr>
+        <tr><td class="name">pi</td><td>TypeScript</td><td>MIT</td><td>Library + CLI</td><td>ต้องการอ่านทำความเข้าใจและประกอบลูปเอง มินิมอล ไม่ซับซ้อน</td></tr>
+        <tr><td class="name">omp</td><td>TS + Rust</td><td>MIT</td><td>Native Binary</td><td>ต้องการความแม่นยำระดับ Language Server (LSP) และมี Debugger ในตัว</td></tr>
+        <tr><td class="name">dsh</td><td>TypeScript</td><td>MIT</td><td>Plugin Host</td><td>ต้องการสร้าง Harness เฉพาะตัวของตัวเอง และอยากให้ทุกอย่างถอดเปลี่ยนได้</td></tr>
+        <tr><td class="name">feynman</td><td>TypeScript</td><td>MIT</td><td>Research Agent</td><td>เน้นงานวิเคราะห์เอกสารงานวิจัย ค้นหาหลักฐาน ไม่ใช่งานเขียนโปรแกรม</td></tr>
+        <tr><td class="name">prime-agent</td><td>Python + IPython</td><td>MIT</td><td>RLM Harness</td><td>งานที่ต้องคิดวิเคราะห์ต่อเนื่องยาวนาน และอยากให้ Harness พัฒนาปรับปรุงตัวเองได้</td></tr>
+        <tr><td class="name">Aider</td><td>Python</td><td>Apache-2.0</td><td>CLI</td><td>ชอบการทำงานร่วมกับ Git อย่างแนบแน่น มีการคอมมิตโค้ดอัตโนมัติทุกขั้นตอน</td></tr>
+        <tr><td class="name">Cline / Roo</td><td>TypeScript</td><td>Apache-2.0</td><td>VS Code Extension</td><td>ชอบทำงานในหน้าจอ VS Code และต้องการกดยืนยันอนุมัติทุกการแก้ไขไฟล์</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="src">เราจงใจไม่ใส่จำนวนดาว GitHub เพราะตัวเลขเปลี่ยนเร็วมากและไม่ได้สะท้อนความเหมาะสมทางวิศวกรรมสำหรับงานของคุณ</p>
+ </div>
+</section>
+
+<!-- ══ 19 TWO ABILITIES ══ -->
+<section class="slide" data-sec="How (ใช้งานอย่างไร)" data-title="สองทักษะสำคัญ: Control vs Loop">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;วิธีใช้งาน Harness ให้ได้ประสิทธิผลสูงสุด (How)</p>
+  <h2>การใช้งาน Harness ให้ทรงพลัง สรุปเหลือเพียง 2 ทักษะหลัก</h2>
+  <div class="cols c2" style="margin-top:clamp(18px,3vh,36px);">
+    <div class="card" style="border-top:3px solid var(--blue);">
+      <span class="num" style="color:var(--blue)">ทักษะที่ 1 (ABILITY ONE)</span>
+      <h3 style="font-size:clamp(22px,2.6vw,32px);font-family:var(--font-display);font-weight:400;letter-spacing:-.02em;">การควบคุม (Control)</h3>
+      <p>คุณสามารถกำหนดสิ่งที่ส่งเข้าไปในโมเดลได้อย่างแม่นยำแค่ไหน — และหยุดมันได้ทันทีหรือไม่เมื่อเริ่มหลุดทาง?</p>
+      <p class="small" style="margin-top:12px;color:var(--muted)">บริบท (Context), คำสั่งหลัก (Instructions), สิทธิ์การเข้าถึง (Permissions), การเลือกโมเดล, และปุ่มหยุดฉุกเฉิน ทักษะการควบคุมคือสิ่งที่ทำให้งานสำเร็จได้ตั้งแต่ครั้งแรก แทนที่จะต้องแก้รอบที่สี่</p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--clay);">
+      <span class="num" style="color:var(--clay)">ทักษะที่ 2 (ABILITY TWO)</span>
+      <h3 style="font-size:clamp(22px,2.6vw,32px);font-family:var(--font-display);font-weight:400;letter-spacing:-.02em;">การปล่อยลูปอัตโนมัติ (Loop)</h3>
+      <p>คุณสามารถปล่อยให้เอเจนต์ทำงานต่อเนื่องโดยที่คุณไม่ต้องคอยนั่งเฝ้าหน้าจอได้ยาวนานแค่ไหน?</p>
+      <p class="small" style="margin-top:12px;color:var(--muted)">การตรวจสอบผลในตัว (Verification), การลองซ้ำเมื่อเครื่องมือพัง (Auto-retry), การย่อสรุปข้อมูล และการแยกโฟลเดอร์ทำงาน ทักษะลูปคือสิ่งที่ทำให้เอเจนต์ทำงานตอนคุณหลับได้อย่างปลอดภัย</p>
+    </div>
+  </div>
+  <div class="note" style="margin-top:24px;"><b>สมการความสำเร็จ:</b>
+    ถ้าคุณมีแค่ <strong>Control</strong> คุณจะได้งานที่ดีแต่เหนื่อย เพราะต้องคอยพิมพ์สั่งทีละคำ... ถ้าคุณมีแค่ <strong>Loop</strong> คุณจะได้งานเร็วแต่งานอาจพัง เพราะปล่อยเอเจนต์วิ่งเตลิด... แต่เมื่อคุณมีทั้งสองอย่าง คุณจะกลายเป็นวิศวกรที่ทำงานได้เทียบเท่าคน 10 คน!</div>
+ </div>
+</section>
+
+<!-- ══ 20 CONTROL LEVERS ══ -->
+<section class="slide" data-sec="How (ใช้งานอย่างไร)" data-title="5 คันโยกของ Control (Control Levers)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;ทักษะที่หนึ่ง: การควบคุม (Control) &nbsp;·&nbsp; เรียงตามผลลัพธ์ที่ได้</p>
+  <h2>5 คันโยกในการควบคุมอินพุตให้เฉียบคม</h2>
+  <div class="stack lev" style="margin-top:clamp(10px,1.8vh,20px);gap:8px;">
+    <div class="card" style="display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start;">
+      <span class="stat"><span class="v acc" style="font-size:clamp(22px,2.4vw,32px)">1</span></span>
+      <div>
+        <h3 style="margin-bottom:4px;">บริบท (Context) — กำหนดสิ่งที่อนุญาตให้เข้าสู่หน้าต่างข้อมูล</h3>
+        <p class="small">ไฟล์ความจำโปรเจกต์ (<code>CLAUDE.md</code> / <code>AGENTS.md</code>), การแนบไฟล์เจาะจง <code>@file</code>, การจำกัดโฟลเดอร์ทำงาน, และการเคลียร์ประวัติเก่าทิ้งเมื่อเริ่มงานใหม่ ปัญหาส่วนใหญ่ที่เอเจนต์ตอบแย่ มักเป็นเพราะปัญหาบริบทเน่า แต่ถูกเข้าใจผิดว่าเป็นเพราะเขียนพรอมต์ไม่ดี</p>
+      </div>
+    </div>
+    <div class="card" style="display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start;">
+      <span class="stat"><span class="v" style="font-size:clamp(22px,2.4vw,32px)">2</span></span>
+      <div>
+        <h3 style="margin-bottom:4px;">System Prompt — กฎเหล็กที่ห้ามละเมิด</h3>
+        <p class="small">กำหนดบทบาท, วิธีการคิด, ข้อห้ามเด็ดขาด (เช่น "ห้ามลบโค้ดที่มีอยู่โดยไม่ถาม"), และมาตรฐานการเขียนโค้ดที่โมเดลต้องปฏิบัติตามเสมอ</p>
+      </div>
+    </div>
+    <div class="card" style="display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start;">
+      <span class="stat"><span class="v" style="font-size:clamp(22px,2.4vw,32px)">3</span></span>
+      <div>
+        <h3 style="margin-bottom:4px;">หน้าต่างเครื่องมือ (Tool Surface) — ให้เฉพาะสิ่งที่จำเป็น</h3>
+        <p class="small">อย่าให้เครื่องมือมากเกินไป ยิ่งใส่เครื่องมือเยอะ โมเดลยิ่งสับสนและเสียโทเคนไปกับการอ่านสคีมาเครื่องมือ ให้เฉพาะเครื่องมือที่ต้องใช้กับงานนั้นจริงๆ</p>
+      </div>
+    </div>
+    <div class="card" style="display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start;">
+      <span class="stat"><span class="v" style="font-size:clamp(22px,2.4vw,32px)">4</span></span>
+      <div>
+        <h3 style="margin-bottom:4px;">ระบบสิทธิ์ (Permissions) — ควบคุมด่านตรวจก่อนลงมือ</h3>
+        <p class="small">ตั้งค่าว่าการกระทำใดทำได้ทันที (Auto-approve) เช่น อ่านไฟล์ และการกระทำใดต้องรอมนุษย์กดยืนยัน (Approval-gated) เช่น ลบไฟล์, รัน Bash คำสั่งอันตราย</p>
+      </div>
+    </div>
+    <div class="card" style="display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start;">
+      <span class="stat"><span class="v" style="font-size:clamp(22px,2.4vw,32px)">5</span></span>
+      <div>
+        <h3 style="margin-bottom:4px;">การสั่งหยุดกลางคัน (Interruptibility) — สั่งเบรกได้ทันใจ</h3>
+        <p class="small">ความสามารถในการกด <kbd>Ctrl+C</kbd> หรือ Escape เพื่อสั่งให้เอเจนต์หยุดคิดหรือหยุดรันเครื่องมือทันทีเมื่อเห็นว่าเริ่มผิดทาง โดยไม่ทำให้เซสชันหลุด</p>
+      </div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 21 LOOP LEVERS ══ -->
+<section class="slide" data-sec="How (ใช้งานอย่างไร)" data-title="5 คันโยกของ Loop (Loop Levers)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;ทักษะที่สอง: การปล่อยลูป (Loop) &nbsp;·&nbsp; ทำอย่างไรให้ปล่อยเอเจนต์ทำงานได้ยาวนานขึ้น</p>
+  <h2>5 คันโยกที่จะปลดล็อกให้เอเจนต์ทำงานต่อเนื่องได้อย่างปลอดภัย</h2>
+  <div class="cols c2" style="margin-top:clamp(14px,2.4vh,28px);">
+    <div class="stack">
+      <div class="card" style="background:var(--clay-wash);border-color:transparent;">
+        <span class="num">คันโยกที่สำคัญที่สุด (THE ONE THAT MATTERS MOST)</span>
+        <h3 style="color:var(--clay-deep)">การตรวจสอบผลลัพธ์ในลูป (Verification in the Loop)</h3>
+        <p>ให้เครื่องมือที่เอเจนต์สามารถใช้ตรวจให้คะแนนตัวเองได้ — เช่น การรันชุดทดสอบ (Tests), Typecheck, Linter, สั่ง Build โปรเจกต์ หรือแม้แต่ส่งโค้ดให้เอเจนต์ตัวที่สองช่วยรีวิว เมื่อมีสิ่งนี้ ลูปจะไม่ใช่การเสี่ยงดวงอีกต่อไป หากไม่มีสิ่งนี้ การปล่อยเอเจนต์วิ่งยาวขึ้นก็มีแต่จะได้โค้ดพังๆ ที่ไม่ได้ตรวจทานเพิ่มขึ้นเป็นกองพะเนิน</p>
+        <p class="small" style="margin-top:10px;font-style:italic;color:var(--body)">
+          "การแยกเอเจนต์ที่ลงมือทำงาน ออกจากเอเจนต์ที่คอยตรวจความถูกต้อง คือเคล็ดลับสำคัญที่ทำให้ได้ผลลัพธ์ระดับโปรดักชัน"
+        </p>
+      </div>
+      <div class="card">
+        <span class="num">2 · การลองใหม่อัตโนมัติ (AUTO-RETRY)</span>
+        <h3>การกู้คืนเมื่อเครื่องมือเกิด Error</h3>
+        <p class="small">เมื่อรัน Bash แล้วพัง หรือโมเดลเรียกไฟล์ที่ไม่มีอยู่ Harness ที่ดีจะไม่หยุดทำงานหรือโยนข้อผิดพลาดใส่มนุษย์ทันที แต่มันจะส่ง Error Message กลับไปให้โมเดลอ่านในรอบถัดไป เพื่อให้โมเดลคิดหาวิธีแก้ปัญหาด้วยตัวเอง</p>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card">
+        <span class="num">3 · กลยุทธ์การบีบอัด (COMPACTION)</span>
+        <h3>การตัดทอนประวัติเก่าอย่างชาญฉลาด</h3>
+        <p class="small">เมื่อบริบทเริ่มเต็ม ให้สรุปใจความสิ่งที่ทำสำเร็จแล้ว และคงไว้เฉพาะไฟล์สำคัญ ป้องกันไม่ให้เสียค่าใช้จ่ายซ้ำซ้อนและป้องกันไม่ให้โมเดลสับสน</p>
+      </div>
+      <div class="card">
+        <span class="num">4 · การแยกสภาพแวดล้อม (WORKTREE ISOLATION)</span>
+        <h3>หนึ่งเอเจนต์ หนึ่งโฟลเดอร์ทำงาน</h3>
+        <p class="small">ใช้ Git Worktrees แยกโฟลเดอร์ให้แต่ละเอเจนต์อย่างเด็ดขาด เอเจนต์จะไม่แย่งกันแก้ไขไฟล์เดิม และถ้าเอเจนต์ตัวไหนทำพัง เราแค่ลบโฟลเดอร์นั้นทิ้งได้โดยไม่กระทบโค้ดหลัก</p>
+      </div>
+      <div class="card">
+        <span class="num">5 · ความยาวของสายจูง (LEASH LENGTH)</span>
+        <h3>กำหนดจำนวนรอบสูงสุด (Max Turns)</h3>
+        <p class="small">ตั้งเพดานความยาว เช่น ไม่เกิน 30-50 รอบ เพื่อป้องกันไม่ให้เอเจนต์วนลูปไม่รู้จบจนเงินในกระเป๋าของคุณหมดเกลี้ยง</p>
+      </div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 22 KEY METRICS ══ -->
+<section class="slide" data-sec="How (ใช้งานอย่างไร)" data-title="ตัวชี้วัดสำคัญ (Key Metrics)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;การวัดผลและการสังเกตการณ์ (Instrumentation)</p>
+  <h2>ตัวเลขเพียง 2 ตัวที่สามารถทำนายแทบทุกสิ่งทุกอย่างในระบบ</h2>
+  <div class="cols c2" style="margin-top:16px;">
+    <div class="card" style="border-top:3px solid var(--blue);">
+      <span class="num" style="color:var(--blue)">ตัวชี้วัดที่ 1 · คุณภาพ (QUALITY)</span>
+      <h3 style="font-size:clamp(18px,2vw,24px)">ณ วินาทีนี้ มีอะไรอยู่ในบริบท (Context) ของคุณจริงๆ บ้าง?</h3>
+      <p class="small">ไม่ใช่สิ่งที่คุณ <em>คิด</em> ว่าคุณส่งไป... แต่เป็นสิ่งที่ตัว Harness ทำการประกอบรวมร่างขึ้นมาส่งให้โมเดลจริงๆ: System prompt, นิยามเครื่องมือ, ไฟล์คู่มือ, ทุกไฟล์ที่เอเจนต์เคยแอบเปิดอ่านในเซสชันนี้, และประวัติบทสนทนาทั้งหมด</p>
+      <ul class="small" style="padding-left:18px;line-height:1.72;margin:10px 0 0;">
+        <li>บน Claude Code: พิมพ์คำสั่ง <code>/context</code> เพื่อตรวจเช็ค</li>
+        <li>บน Harness อื่นๆ: ให้ดัมป์ก้อน Request ออกมาดูว่ามีอะไรแอบยัดเข้าไปบ้าง</li>
+        <li>ถ้าโมเดลเริ่มตอบหลอนหรือทำงานแย่ลง ให้ตรวจตัวชี้วัดนี้เป็นอันดับแรก 90% ของปัญหาคือมีขยะล้นอยู่ในบริบท!</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:3px solid var(--clay);">
+      <span class="num" style="color:var(--clay)">ตัวชี้วัดที่ 2 · ต้นทุน (COST)</span>
+      <h3 style="font-size:clamp(18px,2vw,24px)">ต้นทุนเฉลี่ยต่อหนึ่งรอบการทำงาน (Cost per Turn)</h3>
+      <p class="small">อัตราส่วนว่าคุณใช้ประโยชน์จาก <strong>Prompt Caching</strong> ได้คุ้มค่าแค่ไหน เพราะการอ่านแคชถูกกว่าการส่งใหม่เต็มๆ ถึง 90%!</p>
+      <ul class="small" style="padding-left:18px;line-height:1.72;margin:10px 0 0;">
+        <li>รอบที่ 1: จ่ายเต็มราคา + ค่าเขียนแคช (Cache Write 1.25×)</li>
+        <li>รอบที่ 2 ถึง 40: ถ้าไม่มีอะไรไปกวนหัวแคช จะจ่ายแค่ค่าดึงแคช (Cache Read 0.1× เท่านั้น!)</li>
+        <li>ถ้าต้นทุนเฉลี่ยต่อรอบของคุณสูงผิดปกติ แปลว่ามีบั๊กบางอย่างใน Harness ที่ทำให้แคชหลุดทุกรอบ</li>
+      </ul>
+    </div>
+  </div>
+  <div class="note" style="margin-top:20px;"><b>สูตรจำสำหรับวิศวกร:</b>
+    อย่าดูแค่บิลค่าใช้จ่ายรวมตอนสิ้นเดือน ให้ดู <em>Context Composition</em> (สิ่งที่อยู่ในหน้าต่าง) และ <em>Cache Hit Rate</em> (เปอร์เซ็นต์การดึงแคชสำเร็จ) สองตัวนี้จะบอกคุณทุกอย่างว่าระบบกำลังมีสุขภาพดีหรือกำลังเน่าเปื่อย</div>
+ </div>
+</section>
+
+<!-- ══ 23 CACHE ECONOMICS CALCULATOR ══ -->
+<section class="slide" data-sec="How (ใช้งานอย่างไร)" data-title="เศรษฐศาสตร์ของแคช (Cache economics calculator)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;เศรษฐศาสตร์ระบบ AI (How) &nbsp;·&nbsp; <span style="color:var(--muted)">ลองลากแถบเลื่อนสไลเดอร์เพื่อดูการคำนวณเงินจริง</span></p>
+  <h2>มูลค่าที่แท้จริงของระบบ Prompt Caching</h2>
+  <div class="cols split" style="margin-top:12px;align-items:start;">
+    <div class="card">
+      <span class="num">จำลองเซสชันการทำงานจริงของเอเจนต์</span>
+      <div class="stack" style="gap:16px;margin-top:12px;">
+        <label style="display:block;">
+          <span class="k" style="font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);">ขนาดบริบท (Context size): &nbsp;<b id="ctxV" style="color:var(--ink);font-size:13px;">60k</b> โทเคน</span>
+          <input id="ctx" type="range" min="10" max="200" value="60" step="5" style="width:100%;margin-top:8px;accent-color:var(--clay);">
+        </label>
+        <label style="display:block;">
+          <span class="k" style="font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);">จำนวนรอบการทำงาน (Turns): &nbsp;<b id="trnV" style="color:var(--ink);font-size:13px;">25</b> รอบ</span>
+          <input id="trn" type="range" min="5" max="80" value="25" step="1" style="width:100%;margin-top:8px;accent-color:var(--clay);">
+        </label>
+        <label style="display:block;">
+          <span class="k" style="font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);">อัตรา Cache Hit Rate: &nbsp;<b id="hitV" style="color:var(--ink);font-size:13px;">85%</b></span>
+          <input id="hit" type="range" min="0" max="100" value="85" step="5" style="width:100%;margin-top:8px;accent-color:var(--olive);">
+        </label>
+        <div class="row" id="modelPick" style="gap:8px;margin-top:6px;">
+          <button class="chip" data-m="opus" aria-pressed="true">โมเดล Opus 5 ($5 / $0.50)</button>
+          <button class="chip" data-m="fable" aria-pressed="false">โมเดล Fable 5.1 ($10 / $0.25)</button>
+        </div>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card" style="background:var(--surface);border:1px solid var(--rule);">
+        <span class="num">การเปรียบเทียบค่าใช้จ่ายสุทธิ</span>
+        <div class="row" style="justify-content:space-between;align-items:baseline;margin-top:12px;">
+          <span style="color:var(--muted);font-size:13px;">กรณีไม่ใช้แคชเลย (No cache):</span>
+          <span id="costNo" style="font-family:var(--font-mono);font-size:22px;color:var(--clay);">$7.50</span>
+        </div>
+        <div class="row" style="justify-content:space-between;align-items:baseline;margin-top:10px;">
+          <span style="color:var(--muted);font-size:13px;">กรณีมีแคชทำงานปกติ (With cache):</span>
+          <span id="costYes" style="font-family:var(--font-mono);font-size:28px;font-weight:700;color:var(--olive);">$1.76</span>
+        </div>
+        <div style="border-top:1px dashed var(--rule);margin-top:14px;padding-top:12px;" class="row">
+          <span style="font-size:13px;font-weight:600;">ประหยัดเงินในกระเป๋าได้ทันที:</span>
+          <span id="costSave" style="font-family:var(--font-mono);font-size:20px;font-weight:700;color:var(--ink);margin-left:auto;">77%</span>
+        </div>
+      </div>
+      <p class="small" style="color:var(--muted);">
+        <strong>คำอธิบายสำหรับมือใหม่:</strong> ทุกครั้งที่เอเจนต์คิดในรอบใหม่ มันต้องอ่านบริบทเดิมซ้ำ หาก Harness ออกแบบมาดีและมีระบบแคช ค่าอ่านบริบทเก่าจะลดลงเหลือเพียง 1 ใน 10 ของราคาเต็ม ทำให้คุณสามารถให้เอเจนต์ทำงานต่อเนื่อง 40-50 รอบได้โดยกระเป๋าไม่ฉีก!
+      </p>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 24 WHAT BREAKS CACHE ══ -->
+<section class="slide" data-sec="How (ใช้งานอย่างไร)" data-title="อะไรที่ทำให้แคชพัง (What breaks the cache)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;กลไกแคช (How) &nbsp;·&nbsp; <span style="color:var(--muted)">คลิกที่แต่ละบล็อกเพื่อจำลองการแก้ไขข้อมูลและดูว่าแคชพังอย่างไร</span></p>
+  <h2>แคชทำงานแบบ Prefix (จับคู่จากหัวขบวน) และมันเปราะบางมาก!</h2>
+  <p class="small" style="max-width:75ch;color:var(--muted);">
+    ระบบแคชจะตรวจสอบความเหมือนตั้งแต่ <strong>ตัวอักษรแรกสุด</strong> ของคำสั่ง ถ้าคุณเปลี่ยนข้อมูลเพียงตัวอักษรเดียว ณ ตำแหน่ง <em>n</em> ทุกบล็อกที่อยู่ถัดจาก <em>n</em> เป็นต้นไปจะกลายเป็น <strong>Cache Miss (แคชหลุด)</strong> ทันที คุณต้องจ่ายเงินเต็มราคา + ค่าเขียนแคชใหม่ทั้งหมด!
+  </p>
+  <div class="cols split" style="margin-top:18px;align-items:start;">
+    <div id="prefix" class="stack" style="gap:6px;">
+      <div class="pblk card" data-i="0" style="cursor:pointer;padding:12px 16px;">
+        <span class="num" style="margin:0">บล็อก 1 · SYSTEM PROMPT</span>
+        <p class="small" style="margin:4px 0 0;">~2k โทเคน · ไม่ควรแก้ไขระหว่างเซสชัน</p>
+      </div>
+      <div class="pblk card" data-i="1" style="cursor:pointer;padding:12px 16px;">
+        <span class="num" style="margin:0">บล็อก 2 · TOOL SCHEMAS (นิยามเครื่องมือ)</span>
+        <p class="small" style="margin:4px 0 0;">~8k โทเคน · โครงสร้างพารามิเตอร์ของเครื่องมือ</p>
+      </div>
+      <div class="pblk card" data-i="2" style="cursor:pointer;padding:12px 16px;">
+        <span class="num" style="margin:0">บล็อก 3 · MEMORY FILES (ไฟล์ความจำ)</span>
+        <p class="small" style="margin:4px 0 0;">~4k โทเคน · <code>CLAUDE.md</code> หรือ <code>AGENTS.md</code></p>
+      </div>
+      <div class="pblk card" data-i="3" style="cursor:pointer;padding:12px 16px;">
+        <span class="num" style="margin:0">บล็อก 4 · CONVERSATION (ประวัติการคุย)</span>
+        <p class="small" style="margin:4px 0 0;">~45k โทเคน · ข้อความและการเรียกเครื่องมือรอบก่อนๆ</p>
+      </div>
+      <div class="pblk card" data-i="4" style="cursor:pointer;padding:12px 16px;">
+        <span class="num" style="margin:0">บล็อก 5 · THIS TURN (รอบปัจจุบัน)</span>
+        <p class="small" style="margin:4px 0 0;">~1k โทเคน · คำสั่งล่าสุดของคุณในรอบนี้</p>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card" id="pfxOut" style="min-height:120px;">
+        <span class="num">คลิกที่บล็อกด้านซ้ายเพื่อทดสอบ</span>
+        <p>ลองคลิกที่ "บล็อก 1 · SYSTEM PROMPT" เพื่อดูว่าการแอบใส่ Timestamp เวลาปัจจุบันลงใน System Prompt จะส่งผลทำลายล้างต่อค่าใช้จ่ายในระบบอย่างไรบ้าง!</p>
+      </div>
+      <div class="note"><b>กฎทองของวิศวกร Harness:</b>
+        จัดวางสิ่งที่ไม่เคยเปลี่ยนแปลง (Static) ไว้บนสุดเสมอ และเอาสิ่งที่เปลี่ยนแปลงบ่อย (Dynamic) ไปไว้ท้ายสุด ห้ามใส่เวลาปัจจุบัน <code>Date.now()</code> ไว้ในบล็อกบนสุดเด็ดขาด เพราะจะทำให้แคชพัง 100% ทุกรอบการทำงาน!</div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 25 WHAT IS A MULTIPLEXER ══ -->
+<section class="slide" data-sec="Multiplexers (มัลติเพล็กเซอร์)" data-title="Multiplexer คืออะไร?">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;เพื่อนคู่ใจของ Harness (Multiplexers)</p>
+  <h2>Multiplexer คืออะไร และทำไมถึงสำคัญในยุค AI Agent?</h2>
+  <div class="cols split" style="margin-top:16px;">
+    <div>
+      <p class="lede" style="color:var(--ink);">Terminal Multiplexer คือโปรแกรมที่ทำหน้าที่ <strong>แยกโปรเซสการทำงาน ออกจากหน้าต่างจอภาพ (Decouples process from window)</strong></p>
+      <p class="small">หนึ่งหน้าจอเทอร์มินัล สามารถเปิดได้หลายเซสชันอิสระพร้อมกัน คุณสั่ง Detach (ถอดหน้าจอออก) โปรเซสก็ยังคงรันต่อไม่หยุด สัญญาณเน็ตหลุดหรือ SSH ตัด เซิร์ฟเวอร์ก็ไม่ตาย กลับมาเปิดใหม่เมื่อไหร่ ทุกอย่างก็ยังอยู่ที่เดิมเป๊ะ</p>
+      <p class="small">ในอดีต มันมีประโยชน์สำหรับงานคอมไพล์โค้ดยาวๆ บนเซิร์ฟเวอร์... แต่สำหรับ AI Agent ยุคนี้ มันกลายเป็น <strong>โครงสร้างพื้นฐานที่ขาดไม่ได้ (Structural necessity)</strong></p>
+      <div class="note" style="margin-top:16px;"><b>ทำไมเอเจนต์ถึงเปลี่ยนความต้องการนี้:</b>
+        เอเจนต์ทำงานต่อเนื่องยาวนานหลายสิบนาที และต้องการรอการอนุมัติจากมนุษย์เป็นช่วงๆ ถ้าไม่มี Multiplexer หน้าจอของคุณจะถูกยึด และคุณจะไม่สามารถสั่งงานเอเจนต์ตัวที่สองได้เลย</div>
+    </div>
+    <div class="term">
+      <div class="bar"><i></i><i></i><i></i><span>tmux vs herdr (เปรียบเทียบ)</span></div>
+<pre><span class="cm"># tmux แบบดั้งเดิม: เห็นแค่ข้อความตัวอักษร</span>
+[session 0] 0:bash* 1:node- 2:python
+<span class="cm"># ไม่รู้ว่าตัวไหนกำลังคิด หรือตัวไหนรอมนุษย์กดปุ่ม</span>
+
+<span class="cm"># herdr ยุคใหม่: เข้าใจสถานะของ Agent</span>
+┌───────────────────────────────────────┐
+│ 1: claude-agent   <span class="ok">● WORKING (กำลังแก้ไฟล์)</span>│
+│ 2: codex-task     <span class="an">● BLOCKED (รอคุณอนุมัติ)</span>│
+│ 3: unit-tests     <span class="ok">✔ DONE (ผ่านทั้งหมด)</span>   │
+└───────────────────────────────────────┘</pre>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 26 ONE HUMAN MANY AGENTS ══ -->
+<section class="slide" data-sec="Multiplexers (มัลติเพล็กเซอร์)" data-title="มนุษย์หนึ่งคน คุมหลายเอเจนต์ (One human, many agents)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;เพื่อนคู่ใจของ Harness (Multiplexers)</p>
+  <h2>คอขวดของการทำงาน... ได้ย้ายมาอยู่ที่มนุษย์แล้ว!</h2>
+  <figure>
+  <svg class="dia" viewBox="0 0 960 260" role="img" aria-label="มนุษย์หนึ่งคนดูแลเอเจนต์ 6 หน้าต่างใน 4 สถานะ: กำลังทำงาน, รอการอนุมัติ, ว่าง, และเสร็จแล้ว มีเพียงสถานะรอการอนุมัติและเสร็จแล้วเท่านั้นที่ต้องการความสนใจจากมนุษย์">
+    <g>
+      <rect x="360" y="8" width="240" height="48" rx="8" fill="var(--clay-wash)" stroke="#D97757" stroke-width="1.4"/>
+      <text x="480" y="28" text-anchor="middle" font-size="10" fill="#D97757" letter-spacing="1.2">ทรัพยากรที่มีจำกัดที่สุด (SCARCE RESOURCE)</text>
+      <text x="480" y="45" text-anchor="middle" font-size="13" font-weight="600" fill="currentColor">ความสนใจของตัวคุณ (Your Attention)</text>
+    </g>
+    <g stroke="currentColor" stroke-width="1.2" fill="none" opacity=".4">
+      <path d="M480 56 L100 130"/>
+      <path d="M480 56 L250 130"/>
+      <path d="M480 56 L400 130"/>
+      <path d="M480 56 L560 130"/>
+      <path d="M480 56 L710 130"/>
+      <path d="M480 56 L860 130"/>
+    </g>
+    <!-- Pane 1: Working -->
+    <g transform="translate(20, 130)">
+      <rect width="140" height="80" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.2"/>
+      <circle cx="20" cy="22" r="5" fill="#5C86B6"/>
+      <text x="32" y="26" font-size="11" font-weight="600">Claude</text>
+      <text x="16" y="46" font-size="10" fill="var(--muted)">กำลัง Refactor โค้ด</text>
+      <text x="16" y="64" font-size="9.5" fill="#5C86B6">● WORKING (ไม่ต้องดู)</text>
+    </g>
+    <!-- Pane 2: Blocked -->
+    <g transform="translate(180, 130)">
+      <rect width="140" height="80" rx="8" fill="var(--clay-wash)" stroke="#D97757" stroke-width="1.6"/>
+      <circle cx="20" cy="22" r="5" fill="#D97757"/>
+      <text x="32" y="26" font-size="11" font-weight="600">Codex</text>
+      <text x="16" y="46" font-size="10" fill="var(--muted)">ขอลบไฟล์เก่าทิ้ง</text>
+      <text x="16" y="64" font-size="9.5" font-weight="700" fill="#D97757">⚡ BLOCKED (ต้องดู!)</text>
+    </g>
+    <!-- Pane 3: Working -->
+    <g transform="translate(340, 130)">
+      <rect width="140" height="80" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.2"/>
+      <circle cx="20" cy="22" r="5" fill="#5C86B6"/>
+      <text x="32" y="26" font-size="11" font-weight="600">Grok</text>
+      <text x="16" y="46" font-size="10" fill="var(--muted)">รัน Unit Tests 50 ข้อ</text>
+      <text x="16" y="64" font-size="9.5" fill="#5C86B6">● WORKING (ไม่ต้องดู)</text>
+    </g>
+    <!-- Pane 4: Idle -->
+    <g transform="translate(500, 130)">
+      <rect width="140" height="80" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.2" opacity=".7"/>
+      <circle cx="20" cy="22" r="5" fill="#87867F"/>
+      <text x="32" y="26" font-size="11" font-weight="600">opencode</text>
+      <text x="16" y="46" font-size="10" fill="var(--muted)">รอรับคำสั่งใหม่</text>
+      <text x="16" y="64" font-size="9.5" fill="var(--muted)">○ IDLE (ไม่ต้องดู)</text>
+    </g>
+    <!-- Pane 5: Done -->
+    <g transform="translate(660, 130)">
+      <rect width="140" height="80" rx="8" fill="var(--olive-wash)" stroke="#6B7F50" stroke-width="1.6"/>
+      <circle cx="20" cy="22" r="5" fill="#6B7F50"/>
+      <text x="32" y="26" font-size="11" font-weight="600">pi</text>
+      <text x="16" y="46" font-size="10" fill="var(--muted)">แก้บั๊กเสร็จเรียบร้อย</text>
+      <text x="16" y="64" font-size="9.5" font-weight="700" fill="#6B7F50">✔ DONE (ต้องตรวจ!)</text>
+    </g>
+    <!-- Pane 6: Working -->
+    <g transform="translate(820, 130)">
+      <rect width="140" height="80" rx="8" fill="var(--surface)" stroke="currentColor" stroke-width="1.2"/>
+      <circle cx="20" cy="22" r="5" fill="#5C86B6"/>
+      <text x="32" y="26" font-size="11" font-weight="600">dsh</text>
+      <text x="16" y="46" font-size="10" fill="var(--muted)">สร้าง API endpoints</text>
+      <text x="16" y="64" font-size="9.5" fill="#5C86B6">● WORKING (ไม่ต้องดู)</text>
+    </g>
+  </svg>
+  <figcaption>เมื่อรันเอเจนต์ 6 ตัวพร้อมกัน: คุณต้องละสายตาจากตัวที่กำลังทำงาน (Working) และให้ความสนใจเฉพาะตัวที่รอการอนุมัติ (Blocked) หรือตัวที่ทำงานเสร็จแล้ว (Done) เท่านั้น!</figcaption>
+  </figure>
+ </div>
+</section>
+
+<!-- ══ 27 MULTIPLEXER FIELD ══ -->
+<section class="slide" data-sec="Multiplexers (มัลติเพล็กเซอร์)" data-title="สมรภูมิ Multiplexers">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;เพื่อนคู่ใจของ Harness (Multiplexers)</p>
+  <h2>สำรวจสมรภูมิของตัวคุมหน้าจอเทอร์มินัล</h2>
+  <div class="tw" style="margin-top:16px;">
+    <table>
+      <thead><tr><th>เครื่องมือ (Tool)</th><th>เขียนด้วย</th><th>สัญญาอนุญาต</th><th>เป็น Multiplexer จริงไหม?</th><th>สร้างมาเพื่ออะไร</th></tr></thead>
+      <tbody>
+        <tr><td class="name">tmux</td><td>C</td><td>ISC</td><td><span class="tag olive">ใช่ (Yes)</span></td><td>มาตรฐานดั้งเดิม มีอยู่ทุกเครื่อง เสถียรสูง — แต่ไม่เข้าใจสถานะเอเจนต์เลยแม้แต่น้อย</td></tr>
+        <tr><td class="name">zellij</td><td>Rust</td><td>MIT</td><td><span class="tag olive">ใช่ (Yes)</span></td><td>ออกแบบให้ใช้งานง่าย มีปุ่มลัดบอกชัดเจน รองรับเลย์เอาต์ยืดหยุ่นและปลั๊กอิน WASM</td></tr>
+        <tr><td class="name">Ghostty</td><td>Zig</td><td>MIT</td><td><span class="tag" style="background:var(--clay-wash);color:var(--clay-deep)">ไม่ใช่ (No)</span></td><td>เป็น Terminal Emulator ที่เรนเดอร์ด้วย GPU เร็วมาก แต่ตัวมันเองไม่ใช่ Multiplexer</td></tr>
+        <tr><td class="name">cmux</td><td>Swift</td><td>MIT</td><td><span class="tag olive">ใช่ (Yes)</span></td><td>สำหรับ macOS สร้างต่อยอดบน libghostty มีหน้าตาแบบเนทีฟแมค</td></tr>
+        <tr><td class="name">herdr</td><td>Rust</td><td>Apache-2.0</td><td><span class="tag olive">ใช่ (Yes)</span></td><td>สร้างขึ้นมาเพื่อ <strong>AI Agent โดยเฉพาะ</strong> มีระบบดักจับสถานะ Working / Blocked / Done</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note" style="margin-top:20px;"><b>ความเข้าใจผิดยอดฮิต:</b>
+    อย่าสับสนระหว่าง <em>Terminal Emulator</em> (เช่น Ghostty, iTerm2, Alacritty ซึ่งเป็นแค่โปรแกรมเปิดหน้าต่างรับตัวอักษร) กับ <em>Terminal Multiplexer</em> (เช่น tmux, herdr ซึ่งเป็นโปรแกรมจัดการและคงสถานะเซสชันเบื้องหลัง)</div>
+ </div>
+</section>
+
+<!-- ══ 28 HERDR ══ -->
+<section class="slide" data-sec="Multiplexers (มัลติเพล็กเซอร์)" data-title="herdr: รันไทม์เพื่อ Agent">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;มัลติเพล็กเซอร์ยุคใหม่ (Multiplexers · the interesting one)</p>
+  <h2>herdr — รันไทม์ที่สร้างขึ้นเพื่อให้เอเจนต์ของคุณอาศัยอยู่</h2>
+  <div class="cols split" style="margin-top:14px;">
+    <div class="stack">
+      <div class="row">
+        <span class="tag olive">Apache-2.0</span>
+        <span class="tag">เขียนด้วย Rust ไบนารีเดี่ยว</span>
+        <span class="tag">หน้าตา Native TUI</span>
+      </div>
+      <div class="card" style="background:var(--clay-wash);border-color:transparent;">
+        <span class="num">ทำไม herdr ถึงล้ำหน้าที่สุดในหมู่นี้?</span>
+        <h3 style="color:var(--clay-deep)">มันยกระดับ "สถานะเอเจนต์" ขึ้นเป็นพลเมืองชั้นหนึ่ง</h3>
+        <p>Multiplexer ทั่วไปจะมองเห็นหน้าจอเป็นแค่ตัวอักษรที่พิมพ์ไหลไปเรื่อยๆ... แต่ herdr มีกลไกดักจับและรู้ว่าเอเจนต์ตัวนั้นกำลัง <strong>Working (ทำงาน)</strong>, <strong>Blocked (รอมนุษย์อนุมัติ)</strong>, <strong>Idle (ว่าง)</strong> หรือ <strong>Done (เสร็จสิ้น)</strong></p>
+      </div>
+      <ul class="small" style="padding-left:18px;line-height:1.75;margin:8px 0 0;">
+        <li>ระบบกระโดดข้ามทันใจ: กดปุ่มเดียวเพื่อพุ่งตรงไปยังหน้าต่างที่ขึ้นสถานะ <span class="an">● Blocked</span> ทันที</li>
+        <li>มี Unix Socket API ให้ Harness ตัวอื่นส่งคำสั่งเปิด/ปิด/สั่งรันหน้าต่างใหม่ได้โดยตรง</li>
+      </ul>
+    </div>
+    <div class="term">
+      <div class="bar"><i></i><i></i><i></i><span>herdr status demo</span></div>
+<pre><span class="cm"># รายการหน้าต่างเอเจนต์ในเครื่อง</span>
+<span class="kw">ID</span>  <span class="kw">AGENT</span>    <span class="kw">TASK</span>                <span class="kw">STATE</span>    <span class="kw">TIME</span>
+01  claude   refactor-auth       <span class="ok">WORKING</span>  04:12
+02  codex    db-migration        <span class="an">BLOCKED</span>  01:05
+03  grok     write-unit-tests    <span class="ok">WORKING</span>  02:40
+04  opencode generate-docs       <span class="cm">IDLE</span>     00:00
+
+<span class="cm"># แจ้งเตือนผ่านเสียงหรือ Hook ทันทีที่มีตัว Blocked!</span></pre>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 29 HERDR FROM POCKET ══ -->
+<section class="slide" data-sec="Multiplexers (มัลติเพล็กเซอร์)" data-title="คุมงานผ่านมือถือ (herdr from your pocket)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;เปลี่ยนวิถีชีวิตการทำงาน (Multiplexers · from your pocket)</p>
+  <h2>ข้อดีของการแยกโปรเซส: คุณไม่จำเป็นต้องนั่งเฝ้าหน้าจอคอมอีกต่อไป!</h2>
+  <p class="small" style="max-width:76ch;color:var(--muted);">
+    เมื่อโปรเซสถูกแยกออกจากหน้าต่างจอภาพ และเชื่อมต่อคอมพิวเตอร์เข้ากับเครือข่ายส่วนตัวอย่าง <strong>Tailscale</strong> คุณจะหลุดพ้นจากการติดโต๊ะทำงาน เพราะปัญหาใหญ่ของเอเจนต์คือ <em>"มันจะหยุดคอยเมื่อติดสิทธิ์ขออนุมัติ"</em> ถ้าเอเจนต์ติดอยู่ที่ 14:00 น. มันจะนั่งเฉยๆ รอจนกว่าคุณจะเดินกลับมาที่โต๊ะ
+  </p>
+  <figure style="margin:clamp(14px,2.4vh,26px) 0;">
+  <svg class="dia" viewBox="0 0 960 196" role="img" aria-label="โทรศัพท์มือถือและโน้ตบุ๊กเชื่อมต่อผ่านเครือข่าย Tailscale ตรงไปยังเซิร์ฟเวอร์ herdr ที่รันอยู่บนเวิร์กสเตชันในบ้านอย่างปลอดภัย ไม่ต้องเปิดพอร์ตสาธารณะ">
+    <g transform="translate(40, 40)">
+      <rect width="180" height="110" rx="10" fill="var(--surface)" stroke="currentColor" stroke-width="1.2"/>
+      <text x="90" y="32" text-anchor="middle" font-size="13" font-weight="600">📱 สมาร์ตโฟน (iPhone)</text>
+      <text x="90" y="55" text-anchor="middle" font-size="10.5" fill="var(--muted)">อยู่นอกบ้าน / บนรถไฟฟ้า</text>
+      <rect x="25" y="70" width="130" height="26" rx="6" fill="var(--clay-wash)" stroke="#D97757" stroke-width="1"/>
+      <text x="90" y="87" text-anchor="middle" font-size="10" fill="#D97757" font-weight="600">กดอนุมัติ (Approve)</text>
+    </g>
+    <g stroke="#5C86B6" stroke-width="1.6" stroke-dasharray="4" fill="none">
+      <path d="M220 95 L400 95" marker-end="url(#ar)"/>
+    </g>
+    <g transform="translate(380, 50)">
+      <rect width="200" height="90" rx="8" fill="var(--blue-wash)" stroke="#5C86B6" stroke-width="1.4"/>
+      <text x="100" y="35" text-anchor="middle" font-size="12" font-weight="600" fill="#5C86B6">Tailscale VPN</text>
+      <text x="100" y="55" text-anchor="middle" font-size="10" fill="currentColor">เครือข่ายส่วนตัวปลอดภัย 100%</text>
+      <text x="100" y="72" text-anchor="middle" font-size="9.5" fill="var(--muted)">ไม่ต้องเปิด Port สาธารณะ</text>
+    </g>
+    <g stroke="#5C86B6" stroke-width="1.6" stroke-dasharray="4" fill="none">
+      <path d="M580 95 L720 95" marker-end="url(#ar)"/>
+    </g>
+    <g transform="translate(720, 30)">
+      <rect width="200" height="130" rx="10" fill="var(--surface)" stroke="#6B7F50" stroke-width="1.6"/>
+      <text x="100" y="30" text-anchor="middle" font-size="13" font-weight="600" fill="#6B7F50">🖥 เวิร์กสเตชันที่บ้าน</text>
+      <text x="100" y="50" text-anchor="middle" font-size="10" fill="var(--muted)">รันเซิร์ฟเวอร์ herdr</text>
+      <rect x="20" y="65" width="160" height="50" rx="4" fill="var(--ground)"/>
+      <text x="30" y="84" font-size="9.5" fill="currentColor">Pane 1: Claude (รันเทสต์)</text>
+      <text x="30" y="102" font-size="9.5" fill="#D97757">Pane 2: Codex (ขอยืนยัน!)</text>
+    </g>
+  </svg>
+  </figure>
+ </div>
+</section>
+
+<!-- ══ 30 MULTIPLEXER COMMUNICATION ══ -->
+<section class="slide" data-sec="Multiplexers (มัลติเพล็กเซอร์)" data-title="การสื่อสารของ Multiplexer">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;เพื่อนคู่ใจของ Harness (Multiplexers · demo)</p>
+  <h2>เมื่อ Multiplexer กลายร่างเป็น "เครื่องมือ" ให้เอเจนต์สั่งงานได้</h2>
+  <div class="cols split" style="margin-top:14px;">
+    <div class="stack">
+      <p class="small">นี่คือสะพานเชื่อมระหว่างสองซีกของการบรรยายนี้: ถ้าตัว Multiplexer มี Socket API ให้เรียกใช้งานได้ นั่นหมายความว่า <strong>"คำสั่งเปิดหน้าต่างใหม่ (Spawn a pane)" ก็จะกลายเป็นเพียง Tool Call ธรรมดาตัวหนึ่ง</strong> ที่ตัว Harness สามารถสั่งงานได้เอง!</p>
+      <div class="card">
+        <span class="num">กลไกของ HARNESS ขนาดจิ๋วตัวนี้:</span>
+        <ul class="small" style="padding-left:18px;line-height:1.82;margin:6px 0 0;">
+          <li>รับรายการงานทั้งหมดที่ต้องทำ (Task List)</li>
+          <li>เปิดหน้าต่างแยกให้แต่ละงาน โดยมีเอเจนต์ตัวจริงนั่งรันอยู่ข้างใน</li>
+          <li>ตรวจสอบสถานะการทำงานผ่าน Unix Socket</li>
+          <li>ส่งเสียงเตือนเรียกคุณเฉพาะตอนที่มีหน้าต่างติด Blocked รอการตัดสินใจ</li>
+          <li>ปิดหน้าต่างและเก็บกวาดให้เรียบร้อยเมื่องานสำเร็จสมบูรณ์</li>
+        </ul>
+      </div>
+    </div>
+    <div class="term">
+      <div class="bar"><i></i><i></i><i></i><span>agent_manager.py</span></div>
+<pre><span class="cm"># เอเจนต์สั่งเปิดหน้าต่างลูกเพื่อกระจายงาน</span>
+<span class="kw">def</span> <span class="fn">spawn_subagent</span>(task_prompt, branch_name):
+    sock = socket.socket(socket.AF_UNIX)
+    sock.connect(<span class="st">"/tmp/herdr.sock"</span>)
+    
+    <span class="cm"># สั่งเปิด pane ใหม่พร้อมรัน Git worktree</span>
+    payload = {
+        <span class="st">"action"</span>: <span class="st">"new_pane"</span>,
+        <span class="st">"command"</span>: f<span class="st">"git worktree add ../{branch_name} && cd ../{branch_name} && claude"</span>
+    }
+    sock.send(json.dumps(payload))
+    <span class="kw">return</span> <span class="st">"Subagent spawned successfully"</span></pre>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 31 OMARCHY ══ -->
+<section class="slide" data-sec="Multiplexers (มัลติเพล็กเซอร์)" data-title="Omarchy: เลเยอร์ระดับ OS">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;เพื่อนคู่ใจ: ลึกลงไปอีกระดับ (Multiplexers · OS layer)</p>
+  <h2>Omarchy — เมื่อระบบปฏิบัติการมีจุดยืนและออกแบบเพื่อ Agent</h2>
+  <div class="cols split" style="margin-top:12px;align-items:start;">
+    <div class="stack">
+      <div class="row">
+        <span class="tag olive">MIT</span>
+        <span class="tag">Arch Linux + Hyprland</span>
+        <span class="tag clay">v4.0.3 · กันยายน 2026</span>
+        <span class="tag">~39k stars</span>
+      </div>
+      <p class="small">เริ่มต้นเมื่อเดือนมิถุนายน 2025 ในฐานะสคริปต์เซ็ตอัป Arch Linux แต่ในเวอร์ชัน <strong>v3.7 (พฤษภาคม 2026)</strong> มันได้กลายเป็นดิสโทรเต็มตัวที่มีไฟล์ ISO และคลังซอฟต์แวร์ของตัวเอง และในเวอร์ชัน <strong>4.0 "Quattro" (สิงหาคม 2026)</strong> ได้ยกเครื่องเดสก์ท็อปเชลล์ใหม่ทั้งหมดด้วย Quickshell</p>
+      <div class="card">
+        <span class="num">สถาปัตยกรรมระดับ OS</span>
+        <ul class="small" style="padding-left:18px;line-height:1.75;margin:6px 0 0;">
+          <li>ติดตั้งเครื่องมือและ Harness ยอดนิยม 10 ตัวมาให้พร้อมใช้ในระดับ Kernel/OS</li>
+          <li>มีคีย์ลัดระดับระบบ จัดการ Workspace ของแต่ละเอเจนต์แยกหน้าจออย่างลื่นไหล</li>
+          <li>แชร์บริบทความปลอดภัยระหว่างโปรแกรมด้วย Linux Namespaces</li>
+        </ul>
+      </div>
+    </div>
+    <div class="stack">
+      <div class="card" style="border-left:3px solid var(--blue);">
+        <span class="num" style="color:var(--blue)">แนวโน้มแห่งอนาคต</span>
+        <h3 style="font-size:18px;">จาก CLI App สู่ OS Primitive</h3>
+        <p class="small">Omarchy ทำให้เราเห็นว่า ในอนาคตอันใกล้ เอเจนต์จะไม่ใช่แค่โปรแกรมที่เปิดขึ้นมาใช้งานชั่วคราวในเทอร์มินัล แต่จะกลายเป็นบริการพื้นฐานของระบบปฏิบัติการ (OS Daemons) ที่ทำงานอยู่เบื้องหลังตลอดเวลา เช่นเดียวกับ Network Manager หรือ Audio Server</p>
+      </div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 32 CONTEXT ROT ══ -->
+<section class="slide" data-sec="The Wall (กำแพงบริบท)" data-title="บริบทเน่า (Context rot)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;กำแพงที่ทุกคนต้องเจอ (The real ceiling)</p>
+  <h2>กำแพงอุปสรรคที่ทุกระบบต้องเจอ: บริบทเน่า (Context Rot)</h2>
+  <p class="lede" style="margin-bottom:18px;">
+    "โมเดลภาษาไม่ได้ดึงข้อมูลจากหน้าต่างบริบทอย่างสม่ำเสมอเท่ากันทั้งหมด ประสิทธิภาพและความแม่นยำจะลดลงอย่างมีนัยสำคัญเมื่อความยาวของอินพุตเพิ่มขึ้น"
+  </p>
+  <div class="cols split" style="align-items:start;">
+    <figure>
+    <svg class="dia" viewBox="0 0 480 250" role="img" aria-label="เปรียบเทียบสองพรอมต์ที่มีคำตอบเดียวกัน: พรอมต์สั้นกระชับ โมเดลหาเจออย่างแม่นยำ 100% ส่วนพรอมต์ขนาดยาวที่มีข้อมูลรบกวนมาก ความแม่นยำลดฮวบ">
+      <g font-size="10.5">
+        <text x="8" y="14" fill="#D97757" letter-spacing="1.2" font-size="9.5">พรอมต์สั้น · เจาะจง (SHORT &amp; FOCUSED)</text>
+        <rect x="8" y="22" width="200" height="70" rx="6" fill="var(--surface)" stroke="#D97757" stroke-width="1.2"/>
+        <text x="20" y="44" fill="currentColor">System Prompt (กฎหลัก)</text>
+        <rect x="20" y="52" width="176" height="22" rx="4" fill="var(--clay-wash)"/>
+        <text x="30" y="67" font-weight="600" fill="#D97757">★ ข้อมูลชิ้นสำคัญ (คำตอบ)</text>
+        <text x="20" y="110" font-size="9.5" fill="#6B7F50">✔ ความแม่นยำ 98% (หาเจอทันที)</text>
+
+        <text x="240" y="14" fill="var(--muted)" letter-spacing="1.2" font-size="9.5">พรอมต์ยาวเหยียด · มีขยะปน (LONG CONTEXT)</text>
+        <rect x="240" y="22" width="220" height="180" rx="6" fill="var(--surface)" stroke="currentColor" stroke-width="1.2" opacity=".7"/>
+        <text x="252" y="44" fill="var(--muted)">ไฟล์ Log เก่า 2,000 บรรทัด...</text>
+        <text x="252" y="64" fill="var(--muted)">ประวัติการคุยตั้งแต่เมื่อวาน...</text>
+        <rect x="252" y="76" width="196" height="22" rx="4" fill="var(--clay-wash)"/>
+        <text x="262" y="91" font-weight="600" fill="#D97757">★ ข้อมูลชิ้นสำคัญ (จมอยู่ตรงกลาง)</text>
+        <text x="252" y="120" fill="var(--muted)">โค้ดไฟล์อื่นที่ไม่เกี่ยวข้อง...</text>
+        <text x="252" y="140" fill="var(--muted)">สคีมาเครื่องมือที่ไม่ได้ใช้...</text>
+        <text x="252" y="160" fill="var(--muted)">ข้อความ Error เก่าที่แก้ไปแล้ว...</text>
+        <text x="252" y="220" font-size="9.5" fill="#D97757">✖ ความแม่นยำตกเหลือ 45% (หลอน/หาไม่เจอ)</text>
+      </g>
+    </svg>
+    <figcaption>ปรากฏการณ์เข็มในกองฟาง (Needle in a Haystack): ยิ่งยัดข้อมูลใส่โมเดลเยอะ โมเดลยิ่งหาข้อมูลสำคัญไม่เจอ!</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card">
+        <span class="num">3 อาการของ CONTEXT ROT</span>
+        <ul class="small" style="padding-left:18px;line-height:1.75;margin:6px 0 0;">
+          <li><strong>ลืมกฎหลัก:</strong> โมเดลเริ่มละเมิดข้อห้ามใน System Prompt เช่น แอบลบโค้ดที่มีอยู่</li>
+          <li><strong>หมุนวนซ้ำซาก:</strong> เรียกเครื่องมือเดิมซ้ำๆ ทั้งที่ผลลัพธ์ก็เหมือนเดิม</li>
+          <li><strong>ความฉลาดถดถอย:</strong> โมเดลระดับเรือธงเริ่มตอบคำถามผิดในระดับเด็กประถม</li>
+        </ul>
+      </div>
+      <div class="note"><b>บทเรียนสำหรับมือใหม่:</b> อย่าหลงเชื่อตัวเลขสเปก 1M หรือ 2M Context Window ว่ายัดอะไรลงไปก็ได้ เพราะยิ่งยัดเยอะ ผลงานยิ่งแย่และค่าใช้จ่ายยิ่งพุ่ง!</div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 33 RLM ══ -->
+<section class="slide" data-sec="The Wall (กำแพงบริบท)" data-title="RLM: บริบทเป็นตัวแปร (Context as a variable)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;ทางออกของกำแพงบริบท (The real ceiling · answer one)</p>
+  <h2>RLM — เลิกยัดทุกอย่างลงหน้าต่างเดียว แต่เปลี่ยนบริบทให้เป็น "ตัวแปร"</h2>
+  <div class="cols split" style="margin-top:12px;align-items:start;">
+    <figure>
+    <svg class="dia" viewBox="0 0 470 280" role="img" aria-label="เปรียบเทียบ: ฝั่งซ้ายยัดเอกสารทั้งเล่มลงใน Context ทำให้โมเดลล้า ส่วนฝั่งขวา เอกสารเก็บเป็นตัวแปรใน REPL แล้วโมเดลเขียนโค้ดตัดชิ้นส่วนมาวิเคราะห์ทีละส่วน">
+      <!-- Left side: Stuff it all in -->
+      <g transform="translate(10, 10)">
+        <text x="0" y="14" fill="currentColor" opacity=".6" letter-spacing="1.2" font-size="9.5">วิธีเดิม — ยัดทุกอย่างลงไป</text>
+        <rect x="0" y="24" width="190" height="90" rx="6" fill="var(--surface)" stroke="currentColor" stroke-width="1.2"/>
+        <text x="14" y="50" font-size="10" fill="var(--muted)">เอกสาร 500 หน้า (บวมเป่ง)</text>
+        <text x="14" y="70" font-size="10" fill="var(--muted)">ยัดใส่ Context ทั้งก้อน...</text>
+        <text x="14" y="96" font-size="10" fill="#D97757">ผล: โมเดลตอบหลอนและช้ามาก</text>
+      </g>
+      <!-- Right side: RLM variable -->
+      <g transform="translate(230, 10)">
+        <text x="0" y="14" fill="#6B7F50" letter-spacing="1.2" font-size="9.5">แนวคิด RLM — เก็บเป็นตัวแปรใน REPL</text>
+        <rect x="0" y="24" width="230" height="230" rx="6" fill="var(--surface)" stroke="#6B7F50" stroke-width="1.4"/>
+        <text x="14" y="48" font-size="10" font-weight="600" fill="#6B7F50">ตัวแปร: doc = load("huge_file.pdf")</text>
+        <rect x="14" y="60" width="202" height="60" rx="4" fill="var(--ground)"/>
+        <text x="22" y="78" font-size="9.5" font-family="monospace"># โมเดลเขียนโค้ดตัดแบ่งชิ้น</text>
+        <text x="22" y="94" font-size="9.5" font-family="monospace">chunks = [doc[i:i+50] ...]</text>
+        <text x="22" y="110" font-size="9.5" font-family="monospace">ans = [llm(c) for c in chunks]</text>
+        <text x="14" y="140" font-size="10" fill="currentColor">โมเดลเรียกตัวเองซ้ำทีละส่วน</text>
+        <text x="14" y="160" font-size="10" fill="currentColor">แล้วนำคำตอบย่อยมารวมกัน (Reduce)</text>
+        <rect x="14" y="180" width="202" height="30" rx="4" fill="var(--olive-wash)"/>
+        <text x="24" y="200" font-size="10" font-weight="600" fill="#6B7F50">✔ บริบทไม่เคยบวม ผลลัพธ์แม่นยำ 100%</text>
+      </g>
+    </svg>
+    <figcaption>Recursive Language Modeling (RLM): ให้โมเดลมองข้อมูลเป็นตัวแปร แล้วเขียนสคริปต์เรียก LLM ย่อยแบบวนซ้ำ</figcaption>
+    </figure>
+    <div class="stack">
+      <div class="card">
+        <span class="num">หัวใจของแนวคิด RLM:</span>
+        <p class="small">แทนที่จะแปะเอกสารขนาดใหญ่ลงในหน้าต่างแชต เรานำเอกสารนั้นไปเก็บไว้ในสภาพแวดล้อมรันโค้ด (เช่น Python REPL) ในฐานะตัวแปรก้อนหนึ่ง จากนั้นให้โมเดล AI เขียนโค้ดสั้นๆ เข้าไปเสิร์ช, กรอง, หรือส่งเฉพาะท่อนที่ต้องการไปถามโมเดลลูก</p>
+        <p class="small" style="margin-top:10px;color:var(--muted)">ด้วยวิธีนี้ โมเดลตัวหลักจะใช้บริบทเพียงแค่ 2,000 โทเคนในการรันโค้ด แต่สามารถจัดการกับข้อมูลขนาดมหาศาลระดับกิกะไบต์ได้อย่างแม่นยำไม่มีตกหล่น</p>
+      </div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 34 PRIME AGENT ══ -->
+<section class="slide" data-sec="The Wall (กำแพงบริบท)" data-title="prime-agent: Harness ที่แก้ไขตัวเองได้">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;ทางออกของกำแพงบริบท (The real ceiling · answer two)</p>
+  <h2>prime-agent — สถาปัตยกรรม Harness ที่เขียนโค้ดปรับปรุงตัวเอง</h2>
+  <div class="cols c2" style="margin-top:14px;">
+    <div class="card">
+      <span class="num">ไอเดียที่ 1 · นำ RLM มาใช้งานจริง</span>
+      <h3>มีเครื่องมือเพียงตัวเดียว: IPython Kernel</h3>
+      <p class="small">ไม่จำเป็นต้องสร้างเครื่องมือยิบย่อย 20 ตัว... prime-agent ให้เครื่องมือแค่ <strong>ตัวเดียว</strong> คือสภาพแวดล้อมรันไทม์ Python ที่คงสถานะตัวแปรไว้ระหว่างรอบ</p>
+      <ul class="small" style="padding-left:18px;line-height:1.75;margin:10px 0 0;">
+        <li>การอ่านไฟล์, สั่งรัน Bash, ค้นหาเว็บ: ทั้งหมดทำผ่านโค้ด Python บรรทัดสั้นๆ</li>
+        <li>การแตกซับเอเจนต์: ไม่ต้องมีฟังก์ชันพิเศษ แค่สั่งฟังก์ชัน <code>rlm(...)</code> ในโค้ด</li>
+        <li>เลเยอร์เครื่องมือทั้งหมดจึงถูกยุบรวมเข้ากับสภาพแวดล้อมการรันโค้ดโดยสมบูรณ์</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="num">ไอเดียที่ 2 · พัฒนาตัวเอง (SELF-IMPROVING)</span>
+      <h3>โค้ดของ Harness คือตัวแปรที่เอเจนต์แก้ไขได้</h3>
+      <p class="small">เมื่อเอเจนต์พบว่าตัวเองเจอปัญหาเดิมซ้ำๆ หรือต้องการฟังก์ชันตัวช่วยใหม่ มันสามารถเขียนโค้ดสร้างฟังก์ชัน Python ตัวช่วยเก็บไว้ในหน่วยความจำของมันเองได้</p>
+      <div class="note" style="margin-top:12px;"><b>จุดเด่น:</b>
+        ในงานที่ต้องใช้เวลายาวนานเป็นชั่วโมง prime-agent จะเริ่มจากการทำงานช้าๆ แต่เมื่อเวลาผ่านไป มันจะเริ่มสร้างคลังฟังก์ชันตัวช่วยของตัวเอง จนทำงานได้เร็วและแม่นยำขึ้นเรื่อยๆ</div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 35 WHY BUILD YOUR OWN ══ -->
+<section class="slide" data-sec="Build (ลงมือสร้าง)" data-title="ทำไมคุณควรสร้างเอง (Why build your own)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;ลงมือสร้างด้วยตัวเอง (Build your own)</p>
+  <h2>ทำไมคุณถึงควรลองเขียน Harness ของตัวเองสักครั้ง?</h2>
+  <div class="cols c3" style="margin-top:clamp(16px,2.8vh,32px);">
+    <div class="card">
+      <span class="num">01</span>
+      <h3>เพราะแก่นแท้มันเล็กนิดเดียว</h3>
+      <p>โค้ดลูปหลักของ Harness มีความยาวเพียงประมาณ 40 บรรทัดเท่านั้น! คนส่วนใหญ่มักคิดไปเองว่า Harness เป็นระบบขนาดยักษ์ที่สร้างยาก แต่ความจริงคือแก่นของลูปมันเล็กมาก และที่เหลือคือตัวเลือกในการปรับแต่ง</p>
+    </div>
+    <div class="card">
+      <span class="num">02</span>
+      <h3>เพราะบริบทของแต่ละงานไม่เหมือนกัน</h3>
+      <p>Harness ทั่วไปถูกสร้างมาเพื่อบริบทกลางๆ กว้างๆ... แต่ถ้างานของคุณมีโครงสร้างเฉพาะ — เช่น สคีมาฐานข้อมูลองค์กร, คู่มือ Runbook ภายใน, การออกแบบวงจรชิป — คุณสามารถจัดบริบทที่เหนือกว่า Harness ทั่วไปได้มหาศาล</p>
+    </div>
+    <div class="card">
+      <span class="num">03</span>
+      <h3>เพราะการเชื่อมต่อระบบภายใน</h3>
+      <p>คุณสามารถเชื่อมต่อเอเจนต์เข้ากับระบบสิทธิ์, ฐานข้อมูล, ระบบ Log, และเครื่องมือภายในบริษัทของคุณได้อย่างแนบแน่น 100% โดยไม่ต้องส่งข้อมูลลับออกไปเสี่ยงข้างนอก</p>
+    </div>
+  </div>
+  <div class="note" style="margin-top:24px;"><b>ประโยชน์สูงสุด:</b>
+    การได้ลงมือเขียนโค้ด 40 บรรทัดนี้ด้วยตัวเอง จะทำให้คุณ "ตาสว่าง" และเข้าใจทะลุปรุโปร่งในทันทีว่าเครื่องมืออย่าง Claude Code หรือ Cursor ทำงานอย่างไรอยู่เบื้องหลัง!</div>
+ </div>
+</section>
+
+<!-- ══ 36 40 LINES HARNESS ══ -->
+<section class="slide" data-sec="Build (ลงมือสร้าง)" data-title="Harness ใน 40 บรรทัด (40 lines)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;ลงมือสร้างด้วยตัวเอง (Build your own · the whole thing)</p>
+  <h2>นี่คือโค้ด Harness ตัวจริง... ทั้งหมดมีแค่นี้จริงๆ!</h2>
+  <div class="cols split" style="margin-top:12px;align-items:start;">
+    <div class="term sm">
+      <div class="bar"><i></i><i></i><i></i><span>harness.py · โค้ดลูปหลักที่สมบูรณ์</span></div>
+<pre><span class="kw">from</span> anthropic <span class="kw">import</span> Anthropic
+client = Anthropic()
+
+SYSTEM = <span class="st">"คุณคือวิศวกรผู้รอบคอบ ต้องรันการทดสอบตรวจสอบเสมอ"</span>
+TOOLS = [read_file, write_file, run_bash]   <span class="cm"># นิยามฟังก์ชันเครื่องมือ</span>
+
+<span class="kw">def</span> <span class="fn">agent</span>(task, max_turns=<span class="an">50</span>):
+    msgs = [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: task}]
+    
+    <span class="kw">for</span> turn <span class="kw">in</span> range(max_turns):
+        <span class="cm"># ขั้นที่ 1 & 2: รวมบริบทแล้วยิงเรียกโมเดล</span>
+        resp = client.messages.create(
+            model=<span class="st">"claude-3-7-sonnet-latest"</span>,
+            max_tokens=<span class="an">4096</span>,
+            system=SYSTEM,
+            tools=TOOLS,
+            messages=msgs
+        )
+        <span class="cm"># ขั้นที่ 3: ต่อข้อความของโมเดลเข้าประวัติ</span>
+        msgs.append({<span class="st">"role"</span>: <span class="st">"assistant"</span>, <span class="st">"content"</span>: resp.content})
+        
+        <span class="cm"># ตรวจดูว่ามีคำสั่งเรียก Tool ไหม? ถ้าไม่มี แปลว่าเสร็จสิ้น!</span>
+        tool_calls = [b <span class="kw">for</span> b <span class="kw">in</span> resp.content <span class="kw">if</span> b.type == <span class="st">"tool_use"</span>]
+        <span class="kw">if not</span> tool_calls:
+            <span class="kw">return</span> resp.content  <span class="cm"># จบการทำงาน ส่งคำตอบสุดท้าย</span>
+            
+        <span class="cm"># ขั้นที่ 4 & 5: สั่งรันเครื่องมือ แล้วเอาผลลัพธ์ใส่กลับเข้าไป</span>
+        results = []
+        <span class="kw">for</span> t <span class="kw">in</span> tool_calls:
+            out = execute_tool(t.name, t.input) <span class="cm"># รันคำสั่งจริงในเครื่อง</span>
+            results.append({
+                <span class="st">"type"</span>: <span class="st">"tool_result"</span>,
+                <span class="st">"tool_use_id"</span>: t.id,
+                <span class="st">"content"</span>: str(out)
+            })
+        msgs.append({<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: results})
+    <span class="kw">raise</span> RuntimeError(<span class="st">"ติดเพดานจำนวนรอบสูงสุด (Max turns exceeded)"</span>)</pre>
+    </div>
+    <div class="stack">
+      <div class="card" style="border-left:3px solid var(--olive);">
+        <span class="num" style="color:var(--olive)">แก่นแท้ 5 ขั้นตอนตรงตามทฤษฎีเป๊ะ</span>
+        <p class="small">สังเกตในโค้ด: 1) รวมข้อความ <code>msgs</code>, 2) ยิงเรียก API, 3) ต่อคำตอบเข้าประวัติ, 4) ถ้ามี <code>tool_use</code> ให้รันฟังก์ชัน, 5) เอาผลลัพธ์ใส่เป็นบทบาท <code>user</code> แล้ววนลูปกลับไปทำข้อ 1 ใหม่!</p>
+      </div>
+      <div class="note"><b>ความลับของทั้งวงการ:</b>
+        ทุกโปรแกรมเอเจนต์มูลค่าพันล้านดอลลาร์ในตลาด ข้างในมีโครงสร้างแก่นลูปเหมือนโค้ด 40 บรรทัดนี้ทั้งสิ้น!</div>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 37 AFTER LINE 40 ══ -->
+<section class="slide" data-sec="Build (ลงมือสร้าง)" data-title="ทุกสิ่งที่อยู่หลังบรรทัด 40">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;ความจริงของวิศวกรรม (Build your own · the honest part)</p>
+  <h2>ทุกสิ่งที่อยู่หลังบรรทัดที่ 40 ต่างหากคือ "ตัวผลิตภัณฑ์จริง"</h2>
+  <p class="small" style="color:var(--muted);max-width:75ch;">
+    การเขียนลูป 40 บรรทัดใช้เวลาแค่สุดสัปดาห์เดียว... แต่รายการต่อไปนี้คือสิ่งที่วิศวกรต้องใช้เวลาพัฒนาเป็นแรมปี และนี่คือสนามแข่งขันที่แท้จริง:
+  </p>
+  <div class="cols c3" style="margin-top:clamp(14px,2.4vh,28px);gap:12px;">
+    <div class="card">
+      <h3 style="font-size:16px;">กลยุทธ์บริบท (Context Strategy)</h3>
+      <p class="small">จะเลือกไฟล์ไหนเข้าไป จะค้นคืนข้อมูลอย่างไร เมื่อไหร่ควรบีบอัดประวัติ และไฟล์ไหนห้ามส่งซ้ำ นี่คือส่วนที่ยากและมีมูลค่าสูงที่สุด</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px;">วินัยเรื่องแคช (Cache Discipline)</h3>
+      <p class="small">การเรียงลำดับบล็อกให้คงที่, การจัดเรียงสคีมาเครื่องมือแบบ Deterministic, และการห้ามใส่ Timestamp ที่หัวขบวน เพื่อให้แคชไม่หลุด</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px;">ความปลอดภัย (Safety &amp; Sandbox)</h3>
+      <p class="small">การแยกสภาพแวดล้อมรันโค้ด, ป้องกันไม่ให้โมเดลรันคำสั่ง <code>rm -rf /</code>, การควบคุมสิทธิ์การเขียนไฟล์ และป้องกัน Prompt Injection</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px;">การกู้คืนข้อผิดพลาด (Error Recovery)</h3>
+      <p class="small">เมื่อเครื่องมือส่งผลลัพธ์ Error หรือส่ง JSON พัง จะทำอย่างไรให้เอเจนต์ไม่หยุดทำงานแต่สามารถแก้ไขตัวเองได้</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px;">อินเทอร์เฟซผู้ใช้ (User Experience)</h3>
+      <p class="small">การสตรีมตัวอักษรแบบสดๆ, การแสดงผลตาราง Diff เปรียบเทียบโค้ดก่อน-หลังแก้, การมีปุ่มลัดกดยกเลิกฉุกเฉิน</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px;">การตรวจสอบผล (Verification Loop)</h3>
+      <p class="small">การฝังระบบรันเทสต์, การเชื่อมต่อ Language Server (LSP) เพื่อเช็คไวยากรณ์ และการใช้เอเจนต์ตัวที่สองตรวจโค้ด</p>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 38 DEMO DSH ══ -->
+<section class="slide" data-sec="Build (ลงมือสร้าง)" data-title="สาธิต: สร้างบน dsh (Demo on dsh)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;สาธิตปฏิบัติการ (Build your own · live demo)</p>
+  <h2>สาธิต — สร้างบน dsh (DeepSeek Harness) ที่ทุกอย่างคือปลั๊กอิน</h2>
+  <div class="cols split" style="margin-top:14px;">
+    <div class="stack">
+      <div class="card">
+        <span class="num">ทำไมเราถึงเลือก dsh มาสาธิต?</span>
+        <p class="small">เพราะปรัชญาของมันคือ <em>"ทุกอย่างคือปลั๊กอิน"</em> ชิ้นส่วนกายวิภาคทั้ง 6 ส่วนในสไลด์ที่ 8 ถูกสร้างเป็นช่องเสียบปลั๊กอิน 6 ช่องแยกจากกัน ทำให้เรามองเห็นสถาปัตยกรรมได้อย่างเป็นรูปธรรม ไม่ใช่แค่ทฤษฎีในอากาศ</p>
+      </div>
+      <div class="card">
+        <span class="num">ขั้นตอนการสาธิตสด:</span>
+        <ul class="small" style="padding-left:18px;line-height:1.9;margin:6px 0 0;">
+          <li>สั่งรันเซิร์ฟเวอร์: <code>npx @deepseek-ai/dsh web</code> → เปิดเบราว์เซอร์ <code>127.0.0.1:3080</code></li>
+          <li>เขียนปลั๊กอินเครื่องมือตัวใหม่ใน 10 บรรทัด: เชื่อมต่อคำสั่งตรวจสอบโค้ดภายใน</li>
+          <li>เสียบปลั๊กอินเข้าสู่ระบบโดยไม่ต้องรีสตาร์ทเซิร์ฟเวอร์ (Hot Reloading)</li>
+          <li>ดูเอเจนต์เรียกใช้เครื่องมือใหม่ได้ทันทีในรอบถัดไป!</li>
+        </ul>
+      </div>
+    </div>
+    <div class="term">
+      <div class="bar"><i></i><i></i><i></i><span>my-custom-tool.ts</span></div>
+<pre><span class="cm">// ปลั๊กอินตัวอย่างบน dsh</span>
+<span class="kw">import</span> { definePlugin } <span class="kw">from</span> <span class="st">'@cordisjs/core'</span>
+
+<span class="kw">export default</span> definePlugin((ctx) => {
+  ctx.harness.registerTool({
+    name: <span class="st">'run_company_linter'</span>,
+    description: <span class="st">'ตรวจสอบมาตรฐานโค้ดตามกฎบริษัท'</span>,
+    parameters: { type: <span class="st">'object'</span>, properties: {} },
+    execute: <span class="kw">async</span> () => {
+      <span class="kw">return</span> <span class="st">'✔ โค้ดผ่านเกณฑ์ความปลอดภัย 100%'</span>
+    }
+  })
+})</pre>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 39 TAKEAWAYS ══ -->
+<section class="slide" data-sec="Close (บทสรุป)" data-title="6 ข้อคิดสำคัญ (Takeaways)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;บทสรุปส่งท้าย (Close)</p>
+  <h2>6 บทเรียนสำคัญที่คุณต้องจดจำและนำไปใช้</h2>
+  <div class="cols c2" style="margin-top:clamp(14px,2.6vh,30px);gap:14px;">
+    <div class="lift">
+      <h3>1 · Harness คือผลงานของคุณครึ่งหนึ่ง</h3>
+      <p class="small">ตัวเลขวัดผลพิสูจน์แล้วว่าโมเดลเดิมแต่ต่าง Harness คะแนนต่างกันถึง 34 แต้ม ต่อไปนี้อย่าพูดถึงคะแนนโมเดลโดยไม่ถามว่ารันบน Harness ตัวไหนอีก</p>
+    </div>
+    <div class="lift">
+      <h3>2 · แยกให้ออกว่าคุณกำลังพูดถึงเลเยอร์ไหน</h3>
+      <p class="small">Harness คุมลูป (Loop), Multiplexer คุมโปรเซส (Process), OS คุมการแยกความปลอดภัย (Isolation) ความสับสนส่วนใหญ่ในวงการเกิดจากการคุยสลับเลเยอร์กัน</p>
+    </div>
+    <div class="lift">
+      <h3>3 · Control และ Loop คือสองทักษะคนละด้าน</h3>
+      <p class="small">คุมอินพุตให้กระชับแม่นยำด้วยการจัดบริบท และขยายความยาวการปล่อยลูปด้วยการฝังระบบตรวจทานผลลัพธ์ (Verification in the Loop)</p>
+    </div>
+    <div class="lift">
+      <h3>4 · แคชคือ Prefix และมันเปราะบางมาก</h3>
+      <p class="small">เงินในกระเป๋าของคุณขึ้นอยู่กับว่าบล็อกหัวขบวนไม่ถูกรบกวน จัดระเบียบบริบทให้คงที่ แล้วคุณจะประหยัดค่าใช้จ่ายได้ถึง 80-90%</p>
+    </div>
+    <div class="lift">
+      <h3>5 · คอขวดของงานได้ย้ายมาอยู่ที่ตัวคุณเองแล้ว</h3>
+      <p class="small">เมื่อคุณมีเอเจนต์ 6 ตัวทำงานพร้อมกัน ทรัพยากรที่มีค่าที่สุดคือความสนใจของคุณ จงใช้ Multiplexer ที่ฉลาดและดูเฉพาะตัวที่ติด Blocked เท่านั้น</p>
+    </div>
+    <div class="lift">
+      <h3>6 · บริบทคือหนี้สิน ไม่ใช่สินทรัพย์</h3>
+      <p class="small">อย่าภูมิใจกับการยัดข้อมูล 200k โทเคนลงในหน้าต่าง เพราะโมเดลจะเริ่มเอ๋อ ยิ่งบริบทสั้นและตรงจุดเท่าไหร่ งานยิ่งออกมาสมบูรณ์แบบเท่านั้น</p>
+    </div>
+  </div>
+ </div>
+</section>
+
+<!-- ══ 40 RESOURCES ══ -->
+<section class="slide" data-sec="Close (บทสรุป)" data-title="แหล่งข้อมูลศึกษาต่อ (Resources)">
+ <div class="wrap">
+  <p class="eyebrow"><span class="n"></span> &nbsp;แหล่งข้อมูลศึกษาต่อ (Close)</p>
+  <h2>ก้าวต่อไป: คลังความรู้และโค้ดเบสที่แนะนำให้อ่าน</h2>
+  <div class="cols c3" style="margin-top:clamp(14px,2.6vh,30px);">
+    <div class="card">
+      <span class="num">HARNESS โอเพนซอร์สที่ต้องอ่าน</span>
+      <ul class="small" style="padding-left:16px;line-height:1.9;margin:6px 0 0;">
+        <li><a href="https://github.com/earendil-works/pi" target="_blank"><code>earendil-works/pi</code></a> — เริ่มที่นี่ โค้ดลูปอ่านง่ายที่สุดในโลก</li>
+        <li><a href="https://github.com/anomalyco/opencode" target="_blank"><code>anomalyco/opencode</code></a> — ระบบ TUI ระดับโปรดักชัน</li>
+        <li><a href="https://github.com/deepseek-ai/dsh" target="_blank"><code>deepseek-ai/dsh</code></a> — สถาปัตยกรรมแบบทุกอย่างคือปลั๊กอิน</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="num">MULTIPLEXER &amp; RUNTIME</span>
+      <ul class="small" style="padding-left:16px;line-height:1.9;margin:6px 0 0;">
+        <li><a href="https://github.com/herdr/herdr" target="_blank"><code>herdr/herdr</code></a> — รันไทม์มัลติเพล็กเซอร์ที่เข้าใจสถานะเอเจนต์</li>
+        <li><a href="https://omarchy.org" target="_blank"><code>omarchy.org</code></a> — ระบบปฏิบัติการ Arch Linux เพื่อเอเจนต์</li>
+        <li><a href="https://tailscale.com" target="_blank"><code>tailscale.com</code></a> — ทำ VPN ควบคุมเอเจนต์ผ่านมือถือ</li>
+      </ul>
+    </div>
+    <div class="card">
+      <span class="num">เอกสารวิจัยที่ต้องอ่าน</span>
+      <ul class="small" style="padding-left:16px;line-height:1.9;margin:6px 0 0;">
+        <li><em>Stop Comparing LLM Agents Without Disclosing the Harness</em> (arXiv:2605.23950)</li>
+        <li><em>Lost in the Middle: How Language Models Use Long Contexts</em> (Stanford)</li>
+        <li><em>Recursive Language Modeling for Complex Tasks</em> (RLM Framework)</li>
+      </ul>
+    </div>
+  </div>
+  <div class="note" style="margin-top:24px;text-align:center;">
+    <b>ขอบคุณทุกท่านที่ร่วมเดินทางสำรวจโลกของ Harness!</b><br>
+    ขอให้สนุกกับการสร้างและควบคุม AI Agent ในระดับวิศวกรมืออาชีพ
+  </div>
+ </div>
+</section>
+
+
+
+  </div><!-- /#slides -->
+
+  <div id="botrail">
+    <span id="count">01 / 42</span>
+    <span id="hint">← → เลื่อนสไลด์ &nbsp;·&nbsp; O ดูภาพรวม &nbsp;·&nbsp; T เปลี่ยนธีม &nbsp;·&nbsp; F เต็มจอ</span>
+    <span class="spacer"></span>
+    <button class="rbtn" id="bOv">สารบัญ (Overview)</button>
+    <button class="rbtn" id="bTh">ธีม (Theme)</button>
+    <button class="rbtn" id="bFs">full</button>
+  </div>
+</div>
+
+<div id="overview" aria-hidden="true">
+  <h2 style="font-size:clamp(24px,3vw,36px);margin-bottom:6px;">Jump to</h2>
+  <p class="src" style="margin:0 0 22px;">Press <kbd>O</kbd> or <kbd>Esc</kbd> to close</p>
+  <div id="ovbody"></div>
+</div>
+<script>
+(function(){
+"use strict";
+var $=function(s,r){return (r||document).querySelector(s);};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s));};
+
+/* ───── slides ───── */
+var slides=$$("#slides .slide"), N=slides.length, cur=-1;
+var pad=function(n){return (n<10?"0":"")+n;};
+
+function show(i,push){
+  i=Math.max(0,Math.min(N-1,i));
+  if(i===cur) return;
+  if(cur>=0) slides[cur].classList.remove("on");
+  cur=i;
+  var s=slides[cur];
+  s.classList.add("on"); s.scrollTop=0;
+  $("#secname").textContent=s.dataset.sec||"";
+  $("#secsub").textContent=s.dataset.title||"";
+  $("#count").textContent=pad(i+1)+" / "+N;
+  $("#bar>i").style.width=((i)/(N-1)*100)+"%";
+  animate(s);
+  fit(s);
+  if(push!==false){ try{history.replaceState(null,"","#"+(i+1));}catch(e){} }
+  $$("#ovbody .ovcard").forEach(function(c){c.classList.toggle("cur",+c.dataset.i===i);});
+}
+function next(){show(cur+1);} function prev(){show(cur-1);}
+
+/* scale a slide down when its content is taller than the stage */
+function fit(s){
+  var w=s.querySelector(".wrap"); if(!w) return;
+  w.style.transform="none"; w.style.height="";
+  var cs=getComputedStyle(s);
+  var avail=s.clientHeight-parseFloat(cs.paddingTop)-parseFloat(cs.paddingBottom);
+  var need=w.scrollHeight;
+  if(need>avail+2){
+    var k=Math.max(.62, avail/need);
+    w.style.transform="scale("+k.toFixed(4)+")";
+    w.style.height=Math.ceil(need*k)+"px";
+  }
+}
+var rt; window.addEventListener("resize",function(){
+  clearTimeout(rt); rt=setTimeout(function(){ if(cur>=0) fit(slides[cur]); },140);
+});
+document.fonts && document.fonts.ready.then(function(){ if(cur>=0) fit(slides[cur]); });
+
+/* animate bars when their slide appears */
+function animate(s){
+  $$(".btrack>i",s).forEach(function(el){
+    el.style.width="0";
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){ el.style.width=el.dataset.w+"%"; });
+    });
+  });
+}
+
+/* ───── keyboard ───── */
+document.addEventListener("keydown",function(e){
+  var t=e.target.tagName;
+  if(t==="INPUT"||t==="TEXTAREA") return;
+  var ov=$("#overview").classList.contains("on");
+  if(e.key==="Escape"){ if(ov) toggleOv(false); return; }
+  if(e.key==="o"||e.key==="O"){ toggleOv(); e.preventDefault(); return; }
+  if(ov) return;
+  switch(e.key){
+    case "ArrowRight": case "ArrowDown": case " ": case "PageDown": case "Enter":
+      next(); e.preventDefault(); break;
+    case "ArrowLeft": case "ArrowUp": case "PageUp": case "Backspace":
+      prev(); e.preventDefault(); break;
+    case "Home": show(0); e.preventDefault(); break;
+    case "End": show(N-1); e.preventDefault(); break;
+    case "t": case "T": theme(); break;
+    case "f": case "F": fs(); break;
+  }
+});
+/* click near the left/right edge to move, but never swallow a control */
+$("#slides").addEventListener("click",function(e){
+  if(e.target.closest && e.target.closest("button,a,input,label,select,textarea,summary,.pblk,.flip,.node,table,pre")) return;
+  if(window.getSelection && String(window.getSelection())) return;
+  var x=e.clientX/window.innerWidth;
+  if(x>.75) next(); else if(x<.25) prev();
+});
+
+/* touch swipe */
+var tx=0,ty=0;
+document.addEventListener("touchstart",function(e){tx=e.changedTouches[0].clientX;ty=e.changedTouches[0].clientY;},{passive:true});
+document.addEventListener("touchend",function(e){
+  var dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.6){ dx<0?next():prev(); }
+},{passive:true});
+
+/* ───── overview ───── */
+slides.forEach(function(s,i){
+  var n=s.querySelector(".eyebrow .n");
+  if(n) n.textContent=pad(i+1);
+});
+
+(function buildOv(){
+  var body=$("#ovbody"), lastSec=null, grid=null;
+  slides.forEach(function(s,i){
+    if(s.dataset.sec!==lastSec){
+      lastSec=s.dataset.sec;
+      var h=document.createElement("p"); h.className="ovsec"; h.textContent=lastSec;
+      body.appendChild(h);
+      grid=document.createElement("div"); grid.className="ovgrid"; body.appendChild(grid);
+    }
+    var b=document.createElement("button");
+    b.className="ovcard"; b.dataset.i=i; b.type="button";
+    b.innerHTML='<span class="n">'+pad(i+1)+'</span><span class="t"></span>';
+    $(".t",b).textContent=s.dataset.title;
+    b.addEventListener("click",function(){ show(i); toggleOv(false); });
+    grid.appendChild(b);
+  });
+})();
+function toggleOv(force){
+  var el=$("#overview");
+  var on=(force===undefined)? !el.classList.contains("on") : force;
+  el.classList.toggle("on",on);
+  el.setAttribute("aria-hidden",on?"false":"true");
+}
+$("#bOv").addEventListener("click",function(){toggleOv();});
+
+/* ───── theme / fullscreen ───── */
+function theme(){
+  var r=document.documentElement;
+  var dark=r.getAttribute("data-theme")==="dark" ||
+    (!r.hasAttribute("data-theme") && matchMedia("(prefers-color-scheme:dark)").matches);
+  r.setAttribute("data-theme",dark?"light":"dark");
+}
+$("#bTh").addEventListener("click",theme);
+function fs(){
+  if(document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+}
+$("#bFs").addEventListener("click",fs);
+
+/* ───── loop diagram ───── */
+var loopText=[
+ ["STEP 1 · ASSEMBLE CONTEXT (รวบรวมบริบท)","นำ System prompt, นิยามเครื่องมือ (Tool schemas), ไฟล์ความจำโปรเจกต์ (<code>CLAUDE.md</code> / <code>AGENTS.md</code>), ไฟล์ที่แนบมา และประวัติการคุยทั้งหมด มารวมเป็นข้อความก้อนเดียวก่อนส่ง นี่คือจุดที่มีพลังส่งผลต่อความฉลาดของเอเจนต์มากที่สุดและคนส่วนใหญ่มองข้ามไป"],
+ ["STEP 2 · CALL THE MODEL (เรียกใช้โมเดล)","ขั้นตอนเดียวที่คุณควบคุมไส้ในไม่ได้ เป็น API เดียวกับที่ทุกคนบนโลกจ่ายเงินเรียกใช้ โมเดลตัวเดียวกัน น้ำหนักเดียวกัน ราคาเดียวกัน ทุกสิ่งที่ทำให้เอเจนต์ของคุณเก่งกว่าคนอื่น เกิดขึ้นที่ขั้นตอนก่อนหน้าและหลังจากกล่องนี้ทั้งสิ้น"],
+ ["STEP 3 · PARSE THE RESPONSE (แยกผลลัพธ์)","ผลตอบกลับมาจากโมเดลเป็นชุดของบล็อก: ข้อความธรรมดา และอาจมีบล็อก <code>tool_use</code> ตัว Harness จะอ่านโครงสร้างข้อมูลเชิงลึก ไม่ใช่อ่านแบบร้อยแก้ว นั่นคือเหตุผลว่าทำไมสคีมาของเครื่องมือถึงสำคัญกว่าการเลือกถ้อยคำในพรอมต์"],
+ ["DECISION · ANY TOOL CALLS? (มีการเรียกเครื่องมือไหม?)","การควบคุมทิศทางการทำงานของเอเจนต์ทั้งหมดขึ้นอยู่กับทางแยกนี้ทางเดียว ถ้าไม่มีการเรียกเครื่องมือ แปลว่าโมเดลเชื่อว่างานเสร็จสิ้นแล้ว เงื่อนไขการหยุดจึงถูกกำหนดโดยวิธีที่คุณอธิบายคำว่า 'งานเสร็จ' ไว้ตั้งแต่ขั้นตอนที่ 1"],
+ ["STEP 4 · EXECUTE TOOLS (รันเครื่องมือจริง)","จุดที่ระบบสิทธิ์, Sandbox และการกำหนดเวลา Timeout ทำงาน และเป็นจุดที่อันตรายที่สุด: โค้ดจริงกำลังรันอยู่บนเครื่องคอมพิวเตอร์ของคุณ ด้วยสิทธิ์เท่าที่คุณมอบให้มัน"],
+ ["EXIT · FINAL ANSWER (ส่งคำตอบสุดท้าย)","เมื่อไม่มีการเรียกเครื่องมือเพิ่ม ลูปจะสิ้นสุดลงและคุณจะได้คำตอบ ใน Harness ที่ดีจะมีขั้นตอนตรวจทาน (Verification) ทำงานก่อนหน้าจุดนี้ — เช่น เทสต์ผ่าน, Typecheck ไม่พัง เพื่อให้คำว่า 'เสร็จแล้ว' มีความหมายจริง"],
+ ["STEP 5 · APPEND TOOL RESULTS (ต่อผลลัพธ์เข้าบริบท)","ผลลัพธ์จากการรันเครื่องมือจะถูกส่งกลับเข้าไปในบทบาทของ User แล้ววนลูปใหม่ สังเกตสิ่งสำคัญที่เพิ่งเกิดขึ้น: บริบทเริ่มยาวขึ้นเรื่อยๆ ถ้าทำแบบนี้ไป 40 รอบ คุณจะชนกำแพงบริบทเน่า (Context Rot) จากบทที่ 5 ทันที"]
+];
+$$("#loopSvg .node").forEach(function(g){
+  g.addEventListener("click",function(){
+    var d=loopText[+g.dataset.i];
+    $("#loopOut").innerHTML='<span class="num">'+d[0]+'</span><p>'+d[1]+'</p>';
+    $$("#loopSvg .node rect, #loopSvg .node polygon").forEach(function(r){r.setAttribute("stroke-width","1.2");});
+    $$("rect, polygon",g).forEach(function(r){r.setAttribute("stroke-width","2.6");});
+  });
+});
+
+/* ───── zoo: flip cards ───── */
+var zcards=$$("#zoo .flip");
+function zscore(){
+  var up=zcards.filter(function(c){return c.classList.contains("up");}).length;
+  $("#zooScore").textContent=up+" / "+zcards.length+" revealed";
+  $("#zooScore").style.color = up===zcards.length ? "var(--clay-deep)" : "";
+}
+zcards.forEach(function(c){
+  c.addEventListener("click",function(){ c.classList.toggle("up"); zscore(); });
+});
+$("#zooAll").addEventListener("click",function(){
+  zcards.forEach(function(c,i){ setTimeout(function(){ c.classList.add("up"); zscore(); }, i*22); });
+});
+$("#zooReset").addEventListener("click",function(){
+  zcards.forEach(function(c){ c.classList.remove("up"); }); zscore();
+});
+zscore();
+$$("#zooFilter .chip").forEach(function(b){
+  b.addEventListener("click",function(){
+    $$("#zooFilter .chip").forEach(function(o){o.setAttribute("aria-pressed",String(o===b));});
+    var f=b.dataset.f;
+    zcards.forEach(function(c){ c.style.display=(f==="all"||c.dataset.c===f)?"":"none"; });
+    fit(slides[cur]);
+  });
+});
+
+/* ───── cache calculator ───── */
+var PRICE={opus:{inp:5,write:6.25,read:0.50,label:"Opus 5"},fable:{inp:10,write:12.50,read:0.25,label:"Fable 5.1"}};
+var model="opus";
+function money(v){ return "$"+(v>=100? v.toFixed(0) : v.toFixed(2)); }
+function calc(){
+  var ctx=+$("#ctx").value*1000, turns=+$("#trn").value, hit=+$("#hit").value/100;
+  var p=PRICE[model];
+  var no=turns*ctx/1e6*p.inp;
+  var yes=turns*ctx/1e6*(hit*p.read+(1-hit)*p.write);
+  $("#ctxV").textContent=(+$("#ctx").value)+"k";
+  $("#trnV").textContent=turns;
+  $("#hitV").textContent=(+$("#hit").value)+"%";
+  $("#costNo").textContent=money(no);
+  $("#costYes").textContent=money(yes);
+  var save=no>0?(1-yes/no)*100:0;
+  $("#costSave").textContent=(save>=0?Math.round(save)+"%":"−"+Math.round(-save)+"%");
+  $("#costSave").style.color=save>=0?"var(--ink)":"var(--clay)";
+}
+["ctx","trn","hit"].forEach(function(id){ $("#"+id).addEventListener("input",calc); });
+$$("#modelPick .chip").forEach(function(b){
+  b.addEventListener("click",function(){
+    $$("#modelPick .chip").forEach(function(o){o.setAttribute("aria-pressed",String(o===b));});
+    model=b.dataset.m; calc();
+  });
+});
+calc();
+
+/* ───── prefix invalidation ───── */
+var pfx=[
+ ["บล็อก 1 ถูกแก้ · SYSTEM PROMPT","คุณแก้ไขเพียงคำเดียวใน System Prompt... <strong>ผลคือทุกบล็อกที่อยู่ถัดจากมันกลายเป็น Cache Miss ทันที!</strong> โทเคน 60k ตัวต้องถูกส่งใหม่เต็มราคา + ค่าเขียนแคชใหม่ นี่คือเหตุผลว่าทำไมการแอบใส่เวลาปัจจุบัน Timestamp ลงใน System Prompt ถึงทำให้แคชพัง 100% ตลอดกาล ทุกรอบการทำงาน!"],
+ ["บล็อก 2 ถูกแก้ · TOOL SCHEMAS (นิยามเครื่องมือ)","คุณเชื่อมต่อเซิร์ฟเวอร์ MCP เพิ่มอีกหนึ่งตัว บล็อกที่ 3, 4 และ 5 จะถูกตัดแคชทิ้งทันที และที่แย่กว่านั้น: ถ้า Harness ของคุณจัดเรียงลำดับเครื่องมือไม่คงที่ (Non-deterministic) แคชจะหลุด <em>ทุกครั้งที่ยิงเรียก</em> และคุณจะไม่มีวันได้ Cache Hit เลย!"],
+ ["บล็อก 3 ถูกแก้ · MEMORY FILES (ไฟล์ความจำ)","คุณแอบเปิดแก้ไฟล์ <code>CLAUDE.md</code> กลางคัน เฉพาะบทสนทนาหลังจากนั้นเท่านั้นที่แคชจะหลุด — ส่วน System Prompt และเครื่องมือยังคงดึงแคชได้อยู่ เสียเงินเพิ่มนิดหน่อยและคุ้มค่าที่จะทำหากพบว่าคำสั่งเดิมผิดทาง"],
+ ["บล็อก 4 ถูกแก้ · CONVERSATION (ประวัติการคุย)","คุณกดย้อนกลับ (Rewind) หรือแก้ไขข้อความในรอบก่อนหน้า ทุกอย่างนับจากรอบนั้นเป็นต้นไปจะต้องถูกส่งและเขียนใหม่ทั้งหมด การคุยต่อท้ายไปเรื่อยๆ ตามปกติแคชจะไม่หลุด แต่การ <em>ย้อนกลับไปแก้ไขอดีต</em> คือสิ่งที่จะทำให้เสียเงินก้อนโต"],
+ ["บล็อก 5 · THIS TURN (รอบปัจจุบัน)","บล็อกนี้จะต้องจ่ายค่าเขียนแคชเสมอ (Cache Write) เพราะเป็นข้อความใหม่ที่ยังไม่เคยมีมาก่อน จ่ายเพิ่ม 1.25 เท่าเพียงรอบเดียว เพื่อให้รอบถัดไปอีก 40 รอบจ่ายค่าอ่านแคชถูกลงเหลือเพียง 0.1 เท่า... หัวใจของเกมนี้คือการรักษาบล็อก 1 ถึง 4 ให้นิ่งสนิท ไม่ถูกรบกวน!"]
+];
+$$("#prefix .pblk").forEach(function(el){
+  el.addEventListener("click",function(){
+    var i=+el.dataset.i;
+    $$("#prefix .pblk").forEach(function(o,j){
+      var hitB=j<i, miss=j>=i;
+      o.style.background = miss? "var(--clay-wash)" : "var(--surface)";
+      o.style.borderColor = j===i? "var(--clay)" : (miss? "transparent":"var(--rule)");
+      o.style.opacity = hitB? "1":"1";
+      var n=o.querySelector(".num");
+      n.style.color = miss? "var(--clay-deep)" : "var(--olive)";
+      var t=o.querySelector("p");
+      t.dataset.orig=t.dataset.orig||t.innerHTML;
+      t.innerHTML=t.dataset.orig+(miss?' <strong style="color:var(--clay-deep)">— MISS</strong>':' <strong style="color:var(--olive)">— cached</strong>');
+    });
+    $("#pfxOut").innerHTML='<span class="num">'+pfx[i][0]+'</span><p>'+pfx[i][1]+'</p>';
+  });
+});
+
+window.addEventListener("hashchange",function(){
+  var n=parseInt((location.hash||"").replace("#",""),10);
+  if(!isNaN(n)) show(n-1,false);
+});
+
+/* ───── boot ───── */
+var h=parseInt((location.hash||"").replace("#",""),10);
+show(isNaN(h)?0:h-1,false);
+})();
+</script>
+
+</body>
+</html>
