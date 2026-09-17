@@ -31,7 +31,7 @@
 
 ### 1. เปิดดูบนเครื่อง Mac ตอนนี้เลย
 ```bash
-open /Users/mrarranger/mrglab/index.html
+open /Volumes/Sample Data/0.Vibe Code All Project/Vscode Claudecode/Harness/index.html
 ```
 
 ### 2. Deploy ขึ้น Vercel
@@ -39,16 +39,16 @@ open /Users/mrarranger/mrglab/index.html
 
 **วิธีที่ 1: ใช้ Vercel CLI ใน Terminal**
 ```bash
-cd /Users/mrarranger/mrglab
+cd /Volumes/Sample Data/0.Vibe Code All Project/Vscode Claudecode/Harness
 vercel --prod
 ```
 
 **วิธีที่ 2: ใช้ GitHub Repo**
-1. สร้าง Repo ใหม่บน GitHub (เช่น `mrarrangerteam/mrglab`)
+1. สร้าง Repo ใหม่บน GitHub (เช่น `mrarrangerteam/harness`)
 2. Push โค้ดขึ้นไป:
    ```bash
-   cd /Users/mrarranger/mrglab
-   git remote add origin https://github.com/mrarrangerteam/mrglab.git
+   cd /Volumes/Sample Data/0.Vibe Code All Project/Vscode Claudecode/Harness
+   git remote add origin https://github.com/mrarrangerteam/harness.git
    git push -u origin main
    ```
-3. เปิดหน้าแดชบอร์ด [https://vercel.com/mrarrangers-projects](https://vercel.com/mrarrangers-projects) แล้วกด **"Add New... -> Project"** เลือก `mrglab` เพื่อ Deploy ทันที!
+3. เปิดหน้าแดชบอร์ด [https://vercel.com/mrarrangers-projects](https://vercel.com/mrarrangers-projects) แล้วกด **"Add New... -> Project"** เลือก `harness` เพื่อ Deploy ทันที!

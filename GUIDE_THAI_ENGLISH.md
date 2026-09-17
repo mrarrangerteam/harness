@@ -21,7 +21,7 @@
    - [เปรียบเทียบที่ 3: Normal REST Response VS SSE Streaming](#เปรียบเทียบที่-3-normal-rest-response-vs-sse-streaming)
    - [เปรียบเทียบที่ 4: Stateless Model VS Stateful Agent (Context Notebook)](#เปรียบเทียบที่-4-stateless-model-vs-stateful-agent-context-notebook)
    - [เปรียบเทียบที่ 5: nanopi (ฉบับศึกษา) VS Production Agent Frameworks](#เปรียบเทียบที่-5-nanopi-ฉบับศึกษา-vs-production-agent-frameworks)
-4. [สรุปโครงสร้างไฟล์โปรเจกต์ mrglab บน Vercel](#สรุปโครงสร้างไฟล์โปรเจกต์-mrglab-บน-vercel)
+4. [สรุปโครงสร้างไฟล์โปรเจกต์ harness บน Vercel](#สรุปโครงสร้างไฟล์โปรเจกต์-harness-บน-vercel)
 
 ---
 
@@ -263,14 +263,14 @@ Client <--- data: {"delta": "ครับ"} ---------------------- Server
 
 ---
 
-## สรุปโครงสร้างไฟล์โปรเจกต์ mrglab บน Vercel
+## สรุปโครงสร้างไฟล์โปรเจกต์ harness บน Vercel
 
 โปรเจกต์นี้ได้รับการสร้างและตั้งค่าไว้ที่ไดเรกทอรี:  
-📂 **`/Users/mrarranger/mrglab/`**
+📂 **`/Volumes/Sample Data/0.Vibe Code All Project/Vscode Claudecode/Harness/`**
 
 ### โครงสร้างไฟล์ภายในโปรเจกต์:
 ```
-/Users/mrarranger/mrglab/
+/Volumes/Sample Data/0.Vibe Code All Project/Vscode Claudecode/Harness/
 ├── index.html          # หน้าเว็บ Interactive App แบบตอบสนอง (Tailwind + Mermaid + Prism)
 ├── vercel.json         # การตั้งค่าสำหรับ Vercel Deployment แบบ Zero-config
 ├── package.json        # เมทาดาทาของโปรเจกต์ (scripts: dev, build)
@@ -287,12 +287,12 @@ Client <--- data: {"delta": "ครับ"} ---------------------- Server
 ### การเปิดดูบนเครื่องและ Deploy:
 1. **เปิดดูใน Browser บน Mac ได้ทันที:**
    ```bash
-   open /Users/mrarranger/mrglab/index.html
+   open /Volumes/Sample Data/0.Vibe Code All Project/Vscode Claudecode/Harness/index.html
    ```
 2. **Deploy ขึ้น Vercel ทันทีผ่าน Terminal:**
    ```bash
-   cd /Users/mrarranger/mrglab
+   cd /Volumes/Sample Data/0.Vibe Code All Project/Vscode Claudecode/Harness
    vercel --prod
    ```
 3. **หรือ Push เข้า GitHub เพื่อเชื่อมกับ Vercel Dashboard:**  
-   บนแดชบอร์ด [https://vercel.com/mrarrangers-projects](https://vercel.com/mrarrangers-projects) ให้เลือก Import Repository `mrglab` เพื่อรับ URL ใช้งานจริง
+   บนแดชบอร์ด [https://vercel.com/mrarrangers-projects](https://vercel.com/mrarrangers-projects) ให้เลือก Import Repository `harness` เพื่อรับ URL ใช้งานจริง
