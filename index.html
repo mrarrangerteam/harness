@@ -73,6 +73,9 @@
         <button onclick="switchTab('tab-ch2')" id="btn-tab-ch2" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
           🛠️ บทที่ 2: สเต็ปสร้าง 23 ขั้น
         </button>
+        <button onclick="switchTab('tab-inside-pi')" id="btn-tab-inside-pi" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
+          🏭 Inside Pi (Production 30 สเต็ป)
+        </button>
         <button onclick="switchTab('tab-comparisons')" id="btn-tab-comparisons" class="tab-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-400 hover:text-slate-200">
           ⚖️ ตัวอย่างเปรียบเทียบ (Comparisons)
         </button>
@@ -97,6 +100,7 @@
   <div class="md:hidden flex overflow-x-auto gap-2 p-2 bg-slate-900 border-b border-slate-800 text-xs">
     <button onclick="switchTab('tab-ch1')" class="tab-btn px-3 py-1 rounded bg-emerald-500 text-white whitespace-nowrap">🗺️ แผนผัง (The Map)</button>
     <button onclick="switchTab('tab-ch2')" class="tab-btn px-3 py-1 rounded text-slate-400 whitespace-nowrap">🛠️ 23 สเต็ป</button>
+    <button onclick="switchTab('tab-inside-pi')" class="tab-btn px-3 py-1 rounded text-slate-400 whitespace-nowrap">🏭 Inside Pi (30 สเต็ป)</button>
     <button onclick="switchTab('tab-comparisons')" class="tab-btn px-3 py-1 rounded text-slate-400 whitespace-nowrap">⚖️ เปรียบเทียบ</button>
     <button onclick="switchTab('tab-code')" class="tab-btn px-3 py-1 rounded text-slate-400 whitespace-nowrap">💻 โค้ด 5 ไฟล์</button>
     <button onclick="switchTab('tab-deploy')" class="tab-btn px-3 py-1 rounded text-slate-400 whitespace-nowrap">🚀 Deploy</button>
@@ -712,6 +716,286 @@ flowchart TB
     </section>
 
     <!-- TAB 3: COMPARISONS -->
+    
+    <!-- TAB: INSIDE PI (PRODUCTION ARCHITECTURE) -->
+    <section id="tab-inside-pi" class="tab-content hidden space-y-6">
+      <div class="bg-slate-900/80 p-6 md:p-8 rounded-2xl border border-slate-800">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold mb-3">
+          🏭 Deep Dive into Production Pi (earendil-works/pi)
+        </div>
+        <h2 class="!mt-0 text-xl md:text-2xl font-bold text-white">
+          Inside Pi: สถาปัตยกรรมระดับ Production จริง (30 สเต็ป)
+        </h2>
+        <p class="text-slate-300 text-sm mt-2">
+          เปรียบเทียบจาก <strong>nanopi</strong> (ฉบับมินิมอลเพื่อการเรียนรู้) สู่ <strong>Pi ตัวจริง</strong> ที่ใช้งานจริงในโลกการทำงาน ซึ่งมีระบบจัดการ Session Tree, การรัน Tools แบบคู่ขนาน (Parallel Execution), การเข้าคิวเขียนไฟล์ (Write Queue), และการโหลด Skill Index
+        </p>
+      </div>
+
+      <div class="space-y-6">
+        
+        <div class="border-l-2 border-indigo-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-indigo-400 uppercase tracking-wide">ช่วง A: เปิดเวิร์กช็อปและเตรียม Session (Steps 01 - 08)</h3>
+          <p class="text-xs text-slate-400">การตรวจหากฎของโปรเจกต์ (CLAUDE.md), การลงทะเบียน Tools และสารบัญ Skills ก่อนเริ่มรับคำสั่ง</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 01</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">01 · The command opens a very small door</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The front door is only a few lines. It prepares the process and gives main the arguments after the Node executable and script name. It does not contain the model loop.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 02</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">02 · Prepare a session, not just a text box</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The coordinator needs a working directory, model/authentication services, settings, resources, and a notebook. The SDK&#39;s session factory brings them together. If a resource loader was already supplied, this function does not reload it here.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 03</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">03 · Collect the workshop rules</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">These are the workshop&#39;s posted rules: project conventions, commands, and cautions. Pi walks the directory ancestry rather than scanning every child folder. Global instructions come first, then ancestor context in outer-to-inner order.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 04</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">04 · Choose what the model may ask Pi to do</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The default toolbox has four tools. A tool name is not an action yet; it tells the model which actions it may request. Settings and explicit selections can change the list. Additional built-ins include grep, find, and ls.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 05</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">05 · Put the skill index on the desk</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">Think of a library catalog, not a stack of every book. Descriptions help the model select a skill; the location tells it where to fetch the full instructions. Discovery can inspect files without inserting all their bodies into the model&#39;s context.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 06</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">06 · Assemble the model&#39;s standing instructions</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">This is the coordinator&#39;s briefing sheet. The default prompt includes tool snippets and guidelines; project instructions and skill metadata are appended. A custom prompt can replace the default base.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 07</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">07 · Open the notebook at the active branch</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">A saved session can contain branches, settings changes, and summaries—not just chat bubbles. Pi rebuilds the conversation for the selected branch. A new session has no old conversation to restore.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 08</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">08 · Put a front desk on the same session</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The same coordinator can serve a terminal UI, a program speaking RPC, or a non-interactive request. Here we follow the ordinary interactive route, not the startup-benchmark special case visible in the excerpt.</p>
+        </div>
+        <div class="border-l-2 border-cyan-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-cyan-400 uppercase tracking-wide">ช่วง B: รับคำสั่งและจัดเส้นทางงาน (Steps 09 - 12)</h3>
+          <p class="text-xs text-slate-400">การแยกแยะ Slash Commands (/skill, /compact), การดึงเนื้อหา Skill เข้ามาใช้งานทันที</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 09</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">09 · Hand the message to the coordinator</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">For an ordinary idle prompt, the front desk passes your text to the session and awaits the run. Interface commands can be handled earlier, and messages typed during an active run have queueing behavior.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 10</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">10 · Sort commands, ordinary text, and queued input</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">A slash does not always mean “replace text.” An extension command runs a registered handler; a prompt template expands text; a skill command loads instructions. An input hook may also transform or handle the message.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 11</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">11 · An explicit skill opens the book immediately</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">This is not the catalog path from step 05. When you explicitly invoke a known skill, Pi itself reads the file and inserts its body. The model does not first need to request a read tool call to obtain that body.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 12</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">12 · Let extensions add context before the run</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">Extensions are plug-ins at defined points, not a second copy of the loop. This hook can add messages and change the run&#39;s system prompt. Other hooks participate in input, context, provider requests, tool calls/results, and session events.</p>
+        </div>
+        <div class="border-l-2 border-emerald-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-emerald-400 uppercase tracking-wide">ช่วง C: ถาม-ทำ-ถามซ้ำ (The Production Loop: Steps 13 - 23)</h3>
+          <p class="text-xs text-slate-400">การรัน runAgentLoop, Provider Adapter Matrix, Parallel Tool Execution, และ Write Queue ต่อไฟล์</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 13</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">13 · Enter the loop actually used by this CLI</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The session handles product concerns; Agent manages a run and its transcript state. Here it hands a snapshot, configuration, event callback, cancellation signal, and model-stream function to the loop.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 14</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">14 · Pack three things for the model</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The model receives a briefing, a conversation, and a toolbox description. Pi-specific message types are converted at this boundary; they need not all look like provider messages throughout the rest of the program.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 15</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">15 · Use the selected provider, not a hardcoded vendor</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The SDK supplies the loop&#39;s stream function. That function reaches the model runtime, which prepares the request and delegates to the selected provider implementation. The loop does not have to know a particular vendor&#39;s wire format.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 16</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">16 · Show progress before the reply is complete</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">Streaming is a sequence of events, not many separate user messages. The interface can draw text and tool-call progress while Pi maintains a partial assistant message. Finalization happens when the response ends.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 17</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">17 · Decide whether there is work to do</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">A reply can include both text and tool calls. Pi inspects the structured content—not whether the text happens to say “I&#39;ll read the file.” Truncated arguments are rejected even if a best-effort parser could turn them into JSON.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 18</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">18 · Decide which tool calls can run together</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">There is no universal “all tools always run one at a time” rule. The loop consults both its execution configuration and the tools&#39; declarations. In the parallel path, returned transcript messages retain tool-call order even if work finishes in a different order.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 19</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">19 · Check the request before touching anything</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The model proposes; the runtime checks. A valid-looking sentence is not enough: the tool must exist, its arguments must pass validation, and any before-tool policy must allow the call.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 20</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">20 · Let the tool do the physical work</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">This is where an enabled tool may read a file, start a shell, or change disk contents. Progress updates go back to listeners. Thrown errors are captured for the tool result; after-tool hooks can further modify the finalized result.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 21</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">21 · For a README, the tool reads bytes</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">If our example request leads the model to call read, this text branch gets the file contents. Offset and limit choose lines; truncation keeps a large file from swallowing the whole context budget. The tool can report how to request the next portion.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 22</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">22 · If the task edits files, writes queue per file</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">This is an optional branch, not something a read-only README request must do. Two same-file edits should not race just because tool calls were scheduled in parallel. The mutation queue waits for the earlier operation, then releases the next one in a finally block.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 23</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">23 · Bring the result back to the model</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">A tool does not normally supply the final answer by itself. It supplies evidence to the conversation, so the model can explain the README or choose another action. A tool result may be an error; that is still information the model can use.</p>
+        </div>
+        <div class="border-l-2 border-amber-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-amber-400 uppercase tracking-wide">ช่วง D: บันทึกสมุดโน้ตแบบแตกกิ่งก้าน (Steps 24 - 26)</h3>
+          <p class="text-xs text-slate-400">การใช้ parentId สร้าง Message Tree และการเขียนประวัติลง JSONL อย่างปลอดภัย</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 24</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">24 · Completed messages become notebook entries</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">Pi listens to its own events. Finalized user messages, assistant messages, and tool results can be recorded as they arrive. A stream of individual text deltas does not create a notebook line for every token.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 25</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">25 · A parent link turns the notebook into a tree</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">JSONL is physically a sequence of lines, but id and parentId describe a tree. The active leaf says which conversation path you are on. Appending a new message makes it a child of that leaf.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 26</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">26 · JSONL is simple storage, not a crash guarantee</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The usual session location is under ~/.pi/agent/sessions/, grouped by an encoded working-directory path. This method can defer a fresh session&#39;s initial write, flush its buffered entries, or append a later entry.</p>
+        </div>
+        <div class="border-l-2 border-rose-500 pl-4 my-6">
+          <h3 class="text-lg font-bold text-rose-400 uppercase tracking-wide">ช่วง E: บีบอัด Context และเคลียร์สถานะ (Steps 27 - 30)</h3>
+          <p class="text-xs text-slate-400">การเช็ก Token Limit, การสร้างข้อความสรุป, และการส่ง Settle Event เพื่อกลับสู่สถานะพร้อมรับคำสั่งใหม่</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 27</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">27 · Check space at the next-response boundary</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">Action in code: AgentSession._compactBeforeNextAssistantResponse(). This is installed in the next-turn preparation hook. Usage-backed estimates also account for messages added after the last valid usage; without usable usage, Pi falls back to a size estimate.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 28</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">28 · Ask for a summary, not a continuation</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The model should summarize the old conversation, not continue its instructions as a fresh task. Pi serializes the conversation and wraps it inside a summarization request. A tool call from the summarizer is rejected.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 29</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">29 · Send the summary plus the recent pages</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">Compaction changes what Pi sends next, not the fact that earlier entries existed. After successful compaction, the session records a summary and a keep boundary, then rebuilds agent messages from the selected branch.</p>
+        </div>
+        <div class="bg-slate-900/80 p-5 rounded-xl border border-slate-800 hover:border-slate-700 transition">
+          <div class="flex items-center justify-between">
+            <span class="badge bg-indigo-500/20 text-indigo-400">Inside Pi · Step 30</span>
+            <span class="text-xs font-mono text-slate-400">earendil-works/pi</span>
+          </div>
+          <h4 class="text-base font-bold text-white mt-2">30 · A loop ending is not quite the same as being idle</h4>
+          <p class="text-xs md:text-sm text-slate-300 mt-1">The coordinator may still need to retry a recoverable error, compact context, or handle queued input after the low-level loop ends. It then clears temporary prompt state, flushes pending messages, and emits its settled signal. Cancellation and failures can also reach cleanup; a settled run is not automatically a successful task.</p>
+        </div>
+      </div>
+    </section>
+
     <section id="tab-comparisons" class="tab-content hidden space-y-8">
       <div class="bg-slate-900/80 p-6 md:p-8 rounded-2xl border border-slate-800">
         <h2 class="!mt-0 text-xl md:text-2xl font-bold text-white">

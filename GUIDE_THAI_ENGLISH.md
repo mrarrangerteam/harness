@@ -151,6 +151,56 @@ flowchart TB
 
 ---
 
+
+---
+
+## บทที่ 3: Inside Pi — สถาปัตยกรรมระดับ Production (30 ขั้นตอน)
+
+ความแตกต่างระหว่าง **`nanopi`** (ฉบับมินิมอลเพื่อการเรียนรู้) กับ **`Pi` ตัวจริง** (จาก `earendil-works/pi`) คือระบบที่รองรับการใช้งานจริงในระดับ Production ซึ่งมีรายละเอียดดังนี้:
+
+### โครงสร้าง 5 ช่วงของ Production Agent (Phase A - E)
+
+#### ช่วง A · เปิดเวิร์กช็อปและเตรียม Session (Steps 01 - 08)
+1. **01 · CLI Entry Point:** ทางเข้าผ่าน Node CLI รับ Arguments โดยยังไม่เริ่มรันลูป
+2. **02 · AgentSession Factory:** เตรียม Working Directory, Auth Services, Resource Loader, และสมุดโน้ต Session
+3. **03 · Project Rules Discovery:** เดินตรวจหากฎระเบียบของโปรเจกต์ เช่น `CLAUDE.md` / `AGENTS.md` จากโฟลเดอร์แม่ลงมาโฟลเดอร์ลูก (Ancestry discovery)
+4. **04 · Tool Registry:** ลงทะเบียนกล่องเครื่องมือมาตรฐาน (`read`, `write`, `edit`, `bash` + `grep`, `find`, `ls`)
+5. **05 · Skill Index on Desk:** วางสารบัญ Skills ไว้บนโต๊ะ (โหลดเฉพาะ Metadata สั้นๆ ก่อน เพื่อไม่ให้เปลือง Context)
+6. **06 · Standing Instructions Assembly:** รวบรวม System Prompt, Environment context, และ Rules เข้าเป็นคำสั่งหลัก
+7. **07 · Session Branch Opening:** โหลดประวัติ Session ณ Branch ปัจจุบัน
+8. **08 · Front Desk on Session:** เชื่อมต่อหน้าจอ (CLI TUI, RPC หรือ Web interface)
+
+#### ช่วง B · รับคำสั่งและจัดเส้นทางงาน (Steps 09 - 12)
+9. **09 · Hand message to Coordinator:** ส่งคำสั่งจากผู้ใช้เข้าสู่ `AgentSession`
+10. **10 · Command & Queue Routing:** แยกแยะระหว่างข้อความปกติ, คำสั่งพิเศษ Slash Commands (`/skill`, `/compact`), และคิวข้อความ
+11. **11 · Explicit Skill Expansion:** หากผู้ใช้เรียก `/skill:name` จะโหลดเนื้อหาฉบับเต็มของ Skill เข้าสู่ Context ทันที
+12. **12 · Extension Hooks:** เปิดโอกาสให้ Extensions แทรก Context พิเศษก่อนรัน
+
+#### ช่วง C · ถาม-ทำ-ถามซ้ำ (The Production Loop: Steps 13 - 23)
+13. **13 · runAgentLoop:** เข้าสู่ลูปการทำงานหลักของ Class `Agent`
+14. **14 · Context Packing:** ประกอบร่าง 3 สิ่ง (System instructions, Message history, Tool schemas) ส่งให้โมเดล
+15. **15 · Provider Adapter Matrix:** เลือกรันผ่าน Adapter ค่ายต่างๆ (Anthropic, Gemini, OpenAI, Bedrock, Ollama)
+16. **16 · Progress Streaming:** สตรีมตัวอักษรและสถานะให้ผู้ใช้เห็นความคืบหน้าแบบ Real-time
+17. **17 · Work Decision:** วิเคราะห์ผลลัพธ์ว่ามี Tool Call ที่ต้องรันหรือไม่
+18. **18 · Parallel Tool Scheduling:** คำนวณว่าเครื่องมือใดสามารถรันขนานกันได้ (Parallel execution) เช่น อ่านหลายไฟล์พร้อมกัน
+19. **19 · Pre-execution Validation:** ตรวจสอบ Parameter ตาม JSON Schema และตรวจเช็กนโยบาย Permission ก่อนแตะเครื่อง
+20. **20 · Physical Tool Execution:** ส่งต่อให้ Tool ทำงานจริง
+21. **21 · Safe File Reading:** อ่านไฟล์แบบปลอดภัยพร้อมระบบ Truncate
+22. **22 · Concurrency Write Queue:** ป้องกัน Race Condition ด้วยการเข้าคิวเขียนไฟล์ (Queue per file)
+23. **23 · Tool Result Feedback:** บันทึกผลลัพธ์กลับเข้าสู่ Context เพื่อส่งต่อให้โมเดลในรอบถัดไป
+
+#### ช่วง D · บันทึกประวัติแบบแตกกิ่งก้าน (Steps 24 - 26)
+24. **24 · Completed Message Notebook:** เปลี่ยนข้อความที่สำเร็จเป็นบันทึกในสมุดโน้ต
+25. **25 · Session Tree with parentId:** ใช้ `parentId` เชื่อมโยงข้อความ ทำให้สามารถ Undo, Fork, หรือแตกกิ่งการสนทนาได้เหมือน Git Branch
+26. **26 · JSONL Storage:** บันทึกประวัติลงไฟล์ JSON Lines แบบ Append-only
+
+#### ช่วง E · บีบอัด Context และเคลียร์สถานะ (Steps 27 - 30)
+27. **27 · Boundary Context Check:** ตรวจสอบ Token Limit ณ รอยต่อระหว่างรอบ
+28. **28 · Standalone Summarization Prompt:** ส่งคำสั่งพิเศษให้โมเดลสรุปประวัติเก่าๆ
+29. **29 · Kept History Splicing:** รวมก้อนสรุปเข้ากับข้อความล่าสุด (Recent window) เพื่อรักษาความต่อเนื่อง
+30. **30 · Settlement & Cleanup:** สิ้นสุดลูปและส่งสัญญาณ Settle เคลียร์ตัวแปรชั่วคราว พร้อมรับคำสั่งรอบถัดไป
+
+
 ## ตัวอย่างเปรียบเทียบเชิงลึก 5 มิติ (Comparative Analysis Matrix)
 
 ### เปรียบเทียบที่ 1: Chatbot ธรรมดา VS AI Coding Agent
